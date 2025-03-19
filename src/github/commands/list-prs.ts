@@ -1,6 +1,6 @@
 /**
  * PR Listing and Selection Command
- * 
+ *
  * Implements commands for listing and selecting GitHub pull requests.
  */
 
@@ -33,40 +33,42 @@ export interface ListPrOptions {
  * @returns Array of pull requests or selected PR number in interactive mode
  */
 export async function listPullRequests(
-  options: ListPrOptions = {}
+  options: ListPrOptions = {},
 ): Promise<PullRequest[] | number | null> {
   // Get the current GitHub repository
   const repoInfo = await getGitHubRepository();
   if (!repoInfo || !repoInfo.owner || !repoInfo.name) {
     throw new Error('Not in a GitHub repository. Please run from a GitHub repository directory.');
   }
-  
+
   const owner = repoInfo.owner;
   const repo = repoInfo.name;
-  
+
   // Set up API client
   const apiClient = new GitHubApiClient(authService, config);
   const repositoryService = new RepositoryService(apiClient);
-  
+
   try {
     // Get list of PRs
     const pullRequests = await repositoryService.listPullRequests(owner, repo, {
       state: options.state || 'open',
-      sort: options.sort || 'updated'
+      sort: options.sort || 'updated',
     });
-    
+
     if (pullRequests.length === 0) {
-      console.log(chalk.yellow(`No ${options.state || 'open'} pull requests found in ${owner}/${repo}`));
+      console.log(
+        chalk.yellow(`No ${options.state || 'open'} pull requests found in ${owner}/${repo}`),
+      );
       return options.interactive ? null : [];
     }
-    
+
     // Interactive or list mode
     if (options.interactive) {
       // Interactive selection
       const selectedPr = await selectPullRequest(pullRequests, {
-        message: `Select a PR from ${owner}/${repo}:`
+        message: `Select a PR from ${owner}/${repo}:`,
       });
-      
+
       return selectedPr;
     } else {
       // Just return the list
@@ -80,7 +82,7 @@ export async function listPullRequests(
     } else {
       console.error(chalk.red(`Error: ${(error as Error).message}`));
     }
-    
+
     return options.interactive ? null : [];
   }
 }
@@ -93,17 +95,17 @@ export function displayPullRequests(pullRequests: PullRequest[]): void {
   if (pullRequests.length === 0) {
     return; // Nothing to display
   }
-  
-  const repoInfo = pullRequests[0].url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+
+  const repoInfo = pullRequests[0].url.match(/https:\/\/github.com\/([^/]+)\/([^/]+)/);
   const repoPath = repoInfo ? `${repoInfo[1]}/${repoInfo[2]}` : 'repository';
-  
+
   console.log(chalk.bold(`OPEN PULL REQUESTS for ${repoPath}:`));
   console.log();
-  
+
   for (const pr of pullRequests) {
     const timeAgo = new Date(pr.createdAt).toLocaleDateString();
     const ciStatus = formatCiStatus(pr.ciStatus);
-    
+
     console.log(`#${pr.number} | ${pr.title} | @${pr.author.login} | ${timeAgo} | ${ciStatus}`);
   }
-} 
+}

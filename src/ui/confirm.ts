@@ -29,24 +29,24 @@ export interface ConfirmOptions {
 export async function confirm(options: ConfirmOptions): Promise<boolean> {
   const theme = options.theme || getTheme();
   const defaultValue = options.defaultValue !== undefined ? options.defaultValue : false;
-  
+
   // Colorize message based on status
   let colorizedMessage = options.message;
-  
+
   if (options.status) {
     const colorKey = statusToColorKey(options.status);
     colorizedMessage = chalk.hex(theme[colorKey])(options.message);
   }
-  
+
   const { answer } = await inquirer.prompt([
     {
       type: 'confirm',
       name: 'answer',
       message: colorizedMessage,
-      default: defaultValue
-    }
+      default: defaultValue,
+    },
   ]);
-  
+
   return answer;
 }
 
@@ -56,18 +56,18 @@ export async function confirm(options: ConfirmOptions): Promise<boolean> {
 export async function confirmFailingCi(prNumber: number, prTitle: string): Promise<boolean> {
   const theme = getTheme();
   const ciStatus = formatCiStatus('failure');
-  
+
   const message = [
     chalk.hex(theme.warning)(`⚠️  Warning: CI checks are failing for PR #${prNumber}`),
     `Title: ${prTitle}`,
     `Status: ${ciStatus}`,
-    'Do you still want to approve this PR?'
+    'Do you still want to approve this PR?',
   ].join('\n');
-  
+
   return confirm({
     message,
     defaultValue: false,
-    status: 'warning'
+    status: 'warning',
   });
 }
 
@@ -76,19 +76,19 @@ export async function confirmFailingCi(prNumber: number, prTitle: string): Promi
  */
 export async function confirmDangerousAction(action: string, details?: string): Promise<boolean> {
   const theme = getTheme();
-  
+
   let message = chalk.hex(theme.error)(`⚠️  Warning: You are about to ${action}`);
-  
+
   if (details) {
     message += `\n${details}`;
   }
-  
+
   message += '\nAre you sure you want to continue?';
-  
+
   return confirm({
     message,
     defaultValue: false,
-    status: 'error'
+    status: 'error',
   });
 }
 
@@ -111,4 +111,4 @@ function statusToColorKey(status: StatusType): keyof ColorTheme {
     default:
       return 'normal';
   }
-} 
+}

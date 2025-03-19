@@ -27,7 +27,7 @@ describe('Theme Management', () => {
   test('should change active theme when set', () => {
     setTheme(darkTheme);
     expect(getTheme()).toEqual(darkTheme);
-    
+
     setTheme(highContrastTheme);
     expect(getTheme()).toEqual(highContrastTheme);
   });
@@ -37,7 +37,7 @@ describe('Theme Management', () => {
     expect(getColor('primary')).toBe(defaultTheme.primary);
     expect(getColor('success')).toBe(defaultTheme.success);
     expect(getColor('error')).toBe(defaultTheme.error);
-    
+
     setTheme(darkTheme);
     expect(getColor('primary')).toBe(darkTheme.primary);
     expect(getColor('success')).toBe(darkTheme.success);
@@ -46,7 +46,7 @@ describe('Theme Management', () => {
 
   test('should return appropriate status colors', () => {
     setTheme(defaultTheme);
-    
+
     expect(getStatusColor('success')).toBe(defaultTheme.success);
     expect(getStatusColor('warning')).toBe(defaultTheme.warning);
     expect(getStatusColor('error')).toBe(defaultTheme.error);
@@ -70,4 +70,4 @@ describe('Theme Management', () => {
     expect(typeof coloredSymbol).toBe('string');
     expect(coloredSymbol.length).toBeGreaterThan(1);
   });
-}); 
+});

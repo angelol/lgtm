@@ -1,6 +1,6 @@
 /**
  * Content Models
- * 
+ *
  * Type definitions for GitHub content-related data structures.
  */
 
@@ -117,4 +117,4 @@ export interface ParsedDiff {
   }[];
   /** Language of the file for syntax highlighting, if detectable */
   language?: string;
-} 
+}

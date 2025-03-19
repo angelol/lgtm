@@ -51,13 +51,13 @@ export class PrListDisplay {
       showCiStatus: options.showCiStatus !== undefined ? options.showCiStatus : true,
       showBorders: options.showBorders !== undefined ? options.showBorders : false,
       maxTitleLength: options.maxTitleLength || 40,
-      maxLabels: options.maxLabels || 3
+      maxLabels: options.maxLabels || 3,
     };
 
     this.tableDisplay = new TableDisplay({
       theme: getTheme(),
       showBorders: this.options.showBorders,
-      truncate: true
+      truncate: true,
     });
   }
 
@@ -75,8 +75,8 @@ export class PrListDisplay {
         width: 6,
         minWidth: 4,
         align: 'left',
-        format: (value) => `#${value}`,
-        priority: 100 // Essential column
+        format: value => `#${value}`,
+        priority: 100, // Essential column
       });
     }
 
@@ -88,9 +88,9 @@ export class PrListDisplay {
       minWidth: 20,
       resizable: true,
       priority: 100, // Essential column
-      format: (value) => {
+      format: value => {
         return value;
-      }
+      },
     });
 
     // Author column
@@ -102,12 +102,12 @@ export class PrListDisplay {
         minWidth: 10,
         hideable: true,
         priority: 50,
-        format: (value) => {
+        format: value => {
           return `@${value.login}`;
         },
         style: {
-          cell: 'secondary'
-        }
+          cell: 'secondary',
+        },
       });
     }
 
@@ -120,12 +120,12 @@ export class PrListDisplay {
         minWidth: 8,
         hideable: true,
         priority: 40,
-        format: (value) => {
+        format: value => {
           return formatDistanceToNow(new Date(value));
         },
         style: {
-          cell: 'muted'
-        }
+          cell: 'muted',
+        },
       });
     }
 
@@ -139,20 +139,24 @@ export class PrListDisplay {
         hideable: true,
         resizable: true,
         priority: 30,
-        format: (labels) => {
+        format: labels => {
           if (!labels || labels.length === 0) {
             return '';
           }
 
           const visibleLabels = labels.slice(0, this.options.maxLabels);
-          
-          return visibleLabels
-            .map((label: { name: string; color: string }) => {
-              return chalk.hex(`#${label.color}`)(label.name);
-            })
-            .join(', ') + 
-            (labels.length > this.options.maxLabels ? `, +${labels.length - this.options.maxLabels}` : '');
-        }
+
+          return (
+            visibleLabels
+              .map((label: { name: string; color: string }) => {
+                return chalk.hex(`#${label.color}`)(label.name);
+              })
+              .join(', ') +
+            (labels.length > this.options.maxLabels
+              ? `, +${labels.length - this.options.maxLabels}`
+              : '')
+          );
+        },
       });
     }
 
@@ -165,10 +169,10 @@ export class PrListDisplay {
         minWidth: 10,
         hideable: true,
         priority: 60,
-        format: (status) => {
+        format: status => {
           // Use the formatCiStatus utility to get colorized status
           return formatCiStatus(status);
-        }
+        },
       });
     }
 
@@ -188,7 +192,7 @@ export class PrListDisplay {
         createdAt: pr.createdAt,
         labels: pr.labels,
         ciStatus: pr.ciStatus,
-        isDraft: pr.isDraft
+        isDraft: pr.isDraft,
       };
     });
   }
@@ -215,19 +219,19 @@ export class PrListDisplay {
 
     parts.push(chalk.hex(theme.primary)(`#${pr.number}`));
     parts.push(chalk.bold(pr.title));
-    
+
     if (this.options.showAuthor) {
       parts.push(chalk.hex(theme.secondary)(`@${pr.author.login}`));
     }
-    
+
     if (this.options.showAge) {
       parts.push(chalk.hex(theme.muted)(`${formatDistanceToNow(new Date(pr.createdAt))}`));
     }
-    
+
     if (this.options.showCiStatus && pr.ciStatus) {
       parts.push(formatCiStatus(pr.ciStatus));
     }
 
     return parts.join(' | ');
   }
-} 
+}

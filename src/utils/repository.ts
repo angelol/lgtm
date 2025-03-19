@@ -71,7 +71,7 @@ export function parseGitHubRepository(url: string): GitHubRepo {
   const defaultResult: GitHubRepo = {
     owner: null,
     name: null,
-    isGitHub: false
+    isGitHub: false,
   };
 
   if (!url) {
@@ -84,7 +84,7 @@ export function parseGitHubRepository(url: string): GitHubRepo {
     return {
       owner: httpsMatch[1],
       name: httpsMatch[2],
-      isGitHub: true
+      isGitHub: true,
     };
   }
 
@@ -94,7 +94,7 @@ export function parseGitHubRepository(url: string): GitHubRepo {
     return {
       owner: sshMatch[1],
       name: sshMatch[2],
-      isGitHub: true
+      isGitHub: true,
     };
   }
 
@@ -115,7 +115,7 @@ export async function getGitHubRepository(dir?: string): Promise<GitHubRepo | nu
 
   // Get the remote URL (try origin first)
   let remoteUrl = await getRemoteUrl('origin', dir);
-  
+
   // If origin doesn't exist, try to find any GitHub remote
   if (!remoteUrl) {
     const remotes = await getRemotes(dir);
@@ -149,4 +149,4 @@ export async function getGitHubRepository(dir?: string): Promise<GitHubRepo | nu
  */
 export function validateRepositoryStructure(repoInfo: GitHubRepo): boolean {
   return !!(repoInfo && repoInfo.isGitHub && repoInfo.owner && repoInfo.name);
-} 
+}

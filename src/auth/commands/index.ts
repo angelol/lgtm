@@ -1,6 +1,6 @@
 /**
  * Authentication Commands Module
- * 
+ *
  * Registers all authentication-related commands.
  */
 
@@ -11,11 +11,11 @@ import { addLogoutCommand } from './logout-command.js';
 
 /**
  * Register all authentication commands
- * 
+ *
  * @param authCommand - The parent auth command
  */
 export function registerAuthCommands(authCommand: Command): void {
   addLoginCommand(authCommand);
   addStatusCommand(authCommand);
   addLogoutCommand(authCommand);
-} 
+}

@@ -10,13 +10,18 @@ export class CustomError extends Error {
   statusCode?: number;
   context?: Record<string, unknown>;
 
-  constructor(message: string, code = 'UNKNOWN_ERROR', statusCode?: number, context?: Record<string, unknown>) {
+  constructor(
+    message: string,
+    code = 'UNKNOWN_ERROR',
+    statusCode?: number,
+    context?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
     this.statusCode = statusCode;
     this.context = context;
-    
+
     // Ensures proper stack trace in modern Node.js
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
@@ -60,11 +65,11 @@ export class RateLimitError extends ApiError {
   getTimeUntilReset(): string {
     const now = new Date();
     const seconds = Math.ceil((this.resetTime.getTime() - now.getTime()) / 1000);
-    
+
     if (seconds < 60) {
       return `${seconds} second${seconds === 1 ? '' : 's'}`;
     }
-    
+
     const minutes = Math.ceil(seconds / 60);
     return `${minutes} minute${minutes === 1 ? '' : 's'}`;
   }
@@ -119,44 +124,45 @@ export class NotFoundError extends CustomError {
  * Utility function to wrap errors from external libraries
  * into our custom error types
  */
-export function wrapError(error: unknown, defaultMessage = 'An unexpected error occurred'): CustomError {
+export function wrapError(
+  error: unknown,
+  defaultMessage = 'An unexpected error occurred',
+): CustomError {
   if (error instanceof CustomError) {
     return error;
   }
-  
+
   // Handle standard Error objects
   if (error instanceof Error) {
     return new CustomError(error.message);
   }
-  
+
   // Handle API errors (like from Octokit)
   const anyError = error as any;
   if (anyError?.status === 401 || anyError?.status === 403) {
     const message = anyError.message || 'Authentication failed';
     return new AuthError(message, { originalError: anyError });
   }
-  
+
   if (anyError?.status === 404) {
     const message = anyError.message || 'Resource not found';
     return new NotFoundError(message, { originalError: anyError });
   }
-  
+
   if (anyError?.status === 429 || (anyError?.message && /rate limit/i.test(anyError.message))) {
-    const resetTime = anyError.headers?.['x-ratelimit-reset'] 
+    const resetTime = anyError.headers?.['x-ratelimit-reset']
       ? parseInt(anyError.headers['x-ratelimit-reset'], 10)
       : Math.floor(Date.now() / 1000) + 60 * 60; // Default 1 hour
-      
-    return new RateLimitError(
-      anyError.message || 'API rate limit exceeded',
-      resetTime,
-      { originalError: anyError }
-    );
+
+    return new RateLimitError(anyError.message || 'API rate limit exceeded', resetTime, {
+      originalError: anyError,
+    });
   }
-  
+
   // Generic fallback
   if (anyError?.message && typeof anyError.message === 'string') {
     return new CustomError(anyError.message, 'UNKNOWN_ERROR', anyError.status);
   }
-  
+
   return new CustomError(defaultMessage);
-} 
+}

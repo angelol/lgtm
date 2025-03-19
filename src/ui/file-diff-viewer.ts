@@ -56,16 +56,16 @@ const DEFAULT_KEY_BINDINGS: FileDiffViewerKeyBindings = {
   quit: ['q', 'escape', 'ctrl+c'],
   open: ['o'],
   approve: ['a'],
-  help: ['h', '?']
+  help: ['h', '?'],
 };
 
 /**
  * Actions that can be taken with the file diff viewer
  */
-export type FileDiffViewerAction = 
+export type FileDiffViewerAction =
   | 'next'
-  | 'previous' 
-  | 'quit' 
+  | 'previous'
+  | 'quit'
   | 'open'
   | 'approve'
   | 'help'
@@ -74,7 +74,11 @@ export type FileDiffViewerAction =
 /**
  * Callback for file diff viewer actions
  */
-export type FileDiffViewerActionCallback = (action: FileDiffViewerAction, file?: FileChange, index?: number) => void;
+export type FileDiffViewerActionCallback = (
+  action: FileDiffViewerAction,
+  file?: FileChange,
+  index?: number,
+) => void;
 
 /**
  * File diff viewer for navigating through changed files in a PR
@@ -112,30 +116,30 @@ export class FileDiffViewer extends EventEmitter {
     }
 
     this.isActive = true;
-    
+
     // Create readline interface with properly typed parameters
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      terminal: true
+      terminal: true,
     });
-    
+
     // Disable output to avoid interference with our rendering
     // @ts-expect-error - We're intentionally disabling output after creating the interface
     this.rl.output = null;
 
     // Put terminal in raw mode to capture keystrokes
     process.stdin.setRawMode?.(true);
-    
+
     // Handle key presses
     const keyPressHandler = this.handleKeyPress.bind(this);
     process.stdin.on('keypress', keyPressHandler);
-    
+
     // Initial render
     this.render();
 
     // Return a promise that resolves when the viewer is closed
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       this.once('quit', () => {
         this.close();
         // Remove the keypress handler
@@ -154,15 +158,15 @@ export class FileDiffViewer extends EventEmitter {
     }
 
     this.isActive = false;
-    
+
     if (this.rl) {
       this.rl.close();
       this.rl = null;
     }
-    
+
     // Restore terminal
     process.stdin.setRawMode?.(false);
-    
+
     // Clear content from screen
     console.clear();
   }
@@ -170,21 +174,24 @@ export class FileDiffViewer extends EventEmitter {
   /**
    * Handle keyboard input
    */
-  private handleKeyPress(_str: string, key: { name: string; ctrl: boolean; meta: boolean; shift: boolean }): void {
+  private handleKeyPress(
+    _str: string,
+    key: { name: string; ctrl: boolean; meta: boolean; shift: boolean },
+  ): void {
     if (!this.isActive || !key) {
       return;
     }
 
     const keyString = key.ctrl ? `ctrl+${key.name}` : key.name;
-    
+
     // Check which action this key corresponds to
     for (const [action, keys] of Object.entries(this.keyBindings)) {
       if (keys.includes(key.name) || keys.includes(keyString)) {
-        this.triggerAction(action as FileDiffViewerAction);
+        this.triggerAction(action);
         return;
       }
     }
-    
+
     // Check for custom actions in additionalActions
     if (this.options.additionalActions && key.name && key.name.length === 1) {
       const customAction = Object.keys(this.options.additionalActions).find(k => k === key.name);
@@ -201,7 +208,7 @@ export class FileDiffViewer extends EventEmitter {
    */
   private triggerAction(action: FileDiffViewerAction): void {
     const currentFile = this.getCurrentFile();
-    
+
     // Handle built-in actions
     switch (action) {
       case 'next':
@@ -223,7 +230,7 @@ export class FileDiffViewer extends EventEmitter {
         this.emit('approve');
         break;
     }
-    
+
     // Emit the action for external handlers
     this.emit(action, currentFile, this.currentFileIndex);
   }
@@ -319,25 +326,25 @@ export class FileDiffViewer extends EventEmitter {
     if (!this.isActive) {
       return;
     }
-    
+
     // Clear the screen
     console.clear();
-    
+
     const currentFile = this.getCurrentFile();
-    
+
     // Render file header with navigation info
     console.log(this.renderHeader(currentFile));
-    
+
     // Render the current file's diff
     const diffOutput = renderDiff(currentFile.patch || '', {
       showLineNumbers: this.options.showLineNumbers,
-      highlight: this.options.highlight
+      highlight: this.options.highlight,
     });
     console.log(diffOutput);
-    
+
     // Render controls and help
     console.log(this.renderControls());
-    
+
     if (this.showingHelp || this.options.showHelp) {
       console.log(this.renderHelp());
     }
@@ -348,7 +355,7 @@ export class FileDiffViewer extends EventEmitter {
    */
   private renderHeader(file: FileChange): string {
     const theme = this.theme;
-    
+
     // Get file status with appropriate color
     let statusColor = theme.info;
     switch (file.status) {
@@ -363,15 +370,15 @@ export class FileDiffViewer extends EventEmitter {
         statusColor = theme.warning;
         break;
     }
-    
+
     const fileStatus = chalk.hex(statusColor)(file.status.toUpperCase());
-    
+
     // Create header with file info
     const header = `
 ${chalk.bold.hex(theme.primary)(`File ${this.currentFileIndex + 1}/${this.diff.files.length}: ${file.filename}`)}
 ${chalk.hex(theme.secondary)(`Status: ${fileStatus}   Changes: +${file.additions}/-${file.deletions}`)}
 `;
-    
+
     return header;
   }
 
@@ -380,23 +387,23 @@ ${chalk.hex(theme.secondary)(`Status: ${fileStatus}   Changes: +${file.additions
    */
   private renderControls(): string {
     const theme = this.theme;
-    
+
     // Create controls based on available actions
     const controls = [];
-    
+
     if (this.hasPreviousFile()) {
       controls.push(`${chalk.bold.hex(theme.primary)('p')} prev`);
     }
-    
+
     if (this.hasNextFile()) {
       controls.push(`${chalk.bold.hex(theme.primary)('n')} next`);
     }
-    
+
     controls.push(`${chalk.bold.hex(theme.primary)('o')} open`);
     controls.push(`${chalk.bold.hex(theme.primary)('a')} approve`);
     controls.push(`${chalk.bold.hex(theme.primary)('q')} quit`);
     controls.push(`${chalk.bold.hex(theme.primary)('?')} help`);
-    
+
     return `\n${controls.join(' | ')}\n`;
   }
 
@@ -405,7 +412,7 @@ ${chalk.hex(theme.secondary)(`Status: ${fileStatus}   Changes: +${file.additions
    */
   private renderHelp(): string {
     const theme = this.theme;
-    
+
     const helpText = `
 ${chalk.bold.hex(theme.primary)('KEYBOARD SHORTCUTS')}
 ${chalk.bold.hex(theme.secondary)('n, →')}       : Next file
@@ -415,7 +422,7 @@ ${chalk.bold.hex(theme.secondary)('a')}         : Approve the PR
 ${chalk.bold.hex(theme.secondary)('q, Esc')}    : Quit
 ${chalk.bold.hex(theme.secondary)('?, h')}      : Toggle help
 `;
-    
+
     return helpText;
   }
 }
@@ -428,8 +435,8 @@ ${chalk.bold.hex(theme.secondary)('?, h')}      : Toggle help
  */
 export async function showFileDiff(
   diff: PullRequestDiff,
-  options: FileDiffViewerOptions = {}
+  options: FileDiffViewerOptions = {},
 ): Promise<void> {
   const viewer = new FileDiffViewer(diff, options);
   return viewer.start();
-} 
+}

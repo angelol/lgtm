@@ -100,4 +100,4 @@ export interface TextStyle {
 /**
  * Error message level
  */
-export type ErrorLevel = 'fatal' | 'error' | 'warning' | 'info'; 
+export type ErrorLevel = 'fatal' | 'error' | 'warning' | 'info';

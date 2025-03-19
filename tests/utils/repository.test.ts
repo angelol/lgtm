@@ -11,7 +11,7 @@ describe('Repository Detection', () => {
       expect(result).toEqual({
         owner: 'username',
         name: 'repo',
-        isGitHub: true
+        isGitHub: true,
       });
     });
 
@@ -21,7 +21,7 @@ describe('Repository Detection', () => {
       expect(result).toEqual({
         owner: 'username',
         name: 'repo',
-        isGitHub: true
+        isGitHub: true,
       });
     });
 
@@ -31,7 +31,7 @@ describe('Repository Detection', () => {
       expect(result).toEqual({
         owner: 'username',
         name: 'repo',
-        isGitHub: true
+        isGitHub: true,
       });
     });
 
@@ -41,7 +41,7 @@ describe('Repository Detection', () => {
       expect(result).toEqual({
         owner: null,
         name: null,
-        isGitHub: false
+        isGitHub: false,
       });
     });
 
@@ -51,8 +51,8 @@ describe('Repository Detection', () => {
       expect(result).toEqual({
         owner: null,
         name: null,
-        isGitHub: false
+        isGitHub: false,
       });
     });
   });
-}); 
+});

@@ -40,26 +40,22 @@ export interface ActionMenuOptions {
  */
 export async function showActionMenu<T>(
   actions: MenuItem<T>[],
-  options: ActionMenuOptions = {}
+  options: ActionMenuOptions = {},
 ): Promise<T | null> {
   const pageSize = options.pageSize || 8;
-  
+
   // Ensure we have a cancel option
-  const allChoices = [
-    ...actions,
-    new inquirer.Separator(),
-    { name: 'Cancel', value: null }
-  ];
-  
+  const allChoices = [...actions, new inquirer.Separator(), { name: 'Cancel', value: null }];
+
   const { action } = await inquirer.prompt([
     {
       type: 'list',
       name: 'action',
       message: options.message || 'What would you like to do?',
       pageSize,
-      choices: allChoices
-    }
+      choices: allChoices,
+    },
   ]);
-  
+
   return action;
-} 
+}

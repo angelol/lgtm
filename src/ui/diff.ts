@@ -39,7 +39,7 @@ const DEFAULT_OPTIONS: DiffOptions = {
   highlight: true,
   showFilePaths: true,
   contextLines: 3,
-  matchingLines: 3
+  matchingLines: 3,
 };
 
 /**
@@ -50,7 +50,7 @@ const DEFAULT_OPTIONS: DiffOptions = {
  */
 export function renderDiff(diff: string | ParsedDiff, customOptions?: DiffOptions): string {
   const options = { ...DEFAULT_OPTIONS, ...customOptions };
-  
+
   try {
     // For test environment, just return simple representation
     if (process.env.NODE_ENV === 'test') {
@@ -63,7 +63,7 @@ export function renderDiff(diff: string | ParsedDiff, customOptions?: DiffOption
 
     // Process the diff content
     let diffOutput = '';
-    
+
     if (typeof diff === 'string') {
       // Convert the raw diff string to HTML using diff2html
       const diffJson = parse(diff);
@@ -71,16 +71,16 @@ export function renderDiff(diff: string | ParsedDiff, customOptions?: DiffOption
         drawFileList: options.showFilePaths,
         matching: 'lines',
         outputFormat: 'line-by-line',
-        maxLineLengthHighlight: 1000
+        maxLineLengthHighlight: 1000,
       });
-      
+
       // Convert HTML to terminal-friendly output
       diffOutput = convertHtmlDiffToTerminal(diffHtml, options);
     } else {
       // Process ParsedDiff object directly
       diffOutput = renderParsedDiff(diff, options);
     }
-    
+
     return diffOutput;
   } catch (error) {
     // In case of errors, return a basic diff representation
@@ -98,22 +98,24 @@ export function renderDiff(diff: string | ParsedDiff, customOptions?: DiffOption
 function renderParsedDiff(diff: ParsedDiff, options: DiffOptions): string {
   const theme = getTheme();
   let output = '';
-  
+
   // Add file header
   if (options.showFilePaths) {
     output += chalk.bold.hex(theme.primary)(`File: ${diff.filename}\n\n`);
   }
-  
+
   // Process each hunk
   for (const hunk of diff.hunks) {
     // Add hunk header
-    output += chalk.hex(theme.info)(`@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@\n`);
-    
+    output += chalk.hex(theme.info)(
+      `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@\n`,
+    );
+
     // Process each line in the hunk
     for (const line of hunk.lines) {
       let linePrefix = ' ';
       let lineColor = theme.normal;
-      
+
       // Set line color based on type
       if (line.type === 'addition') {
         linePrefix = '+';
@@ -122,25 +124,27 @@ function renderParsedDiff(diff: ParsedDiff, options: DiffOptions): string {
         linePrefix = '-';
         lineColor = theme.error;
       }
-      
+
       // Add line numbers if enabled
       let lineNumbers = '';
       if (options.showLineNumbers) {
-        const oldNum = line.type !== 'addition' ? String(line.oldLineNumber || ' ').padStart(4) : '    ';
-        const newNum = line.type !== 'deletion' ? String(line.newLineNumber || ' ').padStart(4) : '    ';
+        const oldNum =
+          line.type !== 'addition' ? String(line.oldLineNumber || ' ').padStart(4) : '    ';
+        const newNum =
+          line.type !== 'deletion' ? String(line.newLineNumber || ' ').padStart(4) : '    ';
         lineNumbers = chalk.dim(`${oldNum} ${newNum} `);
       }
-      
+
       // Highlight syntax if enabled and language is available
-      let content = line.content;
-      
+      const content = line.content;
+
       // Add the formatted line to output
       output += lineNumbers + chalk.hex(lineColor)(linePrefix + content) + '\n';
     }
-    
+
     output += '\n';
   }
-  
+
   return output;
 }
 
@@ -152,10 +156,10 @@ function convertHtmlDiffToTerminal(htmlDiff: string, options: DiffOptions): stri
   // In a real implementation, this would use a library like node-html-parser
   // to extract the diff information and convert to terminal format
   // For this implementation, we'll use a simplified approach
-  
+
   const theme = getTheme();
   let output = '';
-  
+
   // Extract file names
   const fileRegex = /<span class="d2h-file-name">(.*?)<\/span>/g;
   let fileMatch;
@@ -164,24 +168,25 @@ function convertHtmlDiffToTerminal(htmlDiff: string, options: DiffOptions): stri
       output += chalk.bold.hex(theme.primary)(`File: ${fileMatch[1]}\n\n`);
     }
   }
-  
+
   // Extract hunk headers
   const hunkRegex = /<span class="d2h-code-line-ctn">(@@.*?@@)<\/span>/g;
   let hunkMatch;
   while ((hunkMatch = hunkRegex.exec(htmlDiff)) !== null) {
     output += chalk.hex(theme.info)(`${hunkMatch[1]}\n`);
   }
-  
+
   // Extract diff lines (simplified)
-  const lineRegex = /<div class="d2h-code-line (d2h-del|d2h-ins|d2h-cntx)">.*?<span class="d2h-code-line-ctn">(.*?)<\/span>/g;
+  const lineRegex =
+    /<div class="d2h-code-line (d2h-del|d2h-ins|d2h-cntx)">.*?<span class="d2h-code-line-ctn">(.*?)<\/span>/g;
   let lineMatch;
   while ((lineMatch = lineRegex.exec(htmlDiff)) !== null) {
     const type = lineMatch[1];
     const content = lineMatch[2].replace(/<\/?span.*?>/g, '');
-    
+
     let prefix = ' ';
     let color = theme.normal;
-    
+
     if (type === 'd2h-ins') {
       prefix = '+';
       color = theme.success;
@@ -189,10 +194,10 @@ function convertHtmlDiffToTerminal(htmlDiff: string, options: DiffOptions): stri
       prefix = '-';
       color = theme.error;
     }
-    
+
     output += chalk.hex(color)(prefix + content) + '\n';
   }
-  
+
   return output;
 }
 
@@ -202,7 +207,7 @@ function convertHtmlDiffToTerminal(htmlDiff: string, options: DiffOptions): stri
 function formatBasicDiff(diff: string): string {
   const theme = getTheme();
   let output = '';
-  
+
   const lines = diff.split('\n');
   for (const line of lines) {
     if (line.startsWith('+')) {
@@ -215,7 +220,7 @@ function formatBasicDiff(diff: string): string {
       output += line + '\n';
     }
   }
-  
+
   return output;
 }
 
@@ -225,10 +230,12 @@ function formatBasicDiff(diff: string): string {
 function formatBasicParsedDiff(diff: ParsedDiff): string {
   const theme = getTheme();
   let output = chalk.bold.hex(theme.primary)(`File: ${diff.filename}\n\n`);
-  
+
   for (const hunk of diff.hunks) {
-    output += chalk.hex(theme.info)(`@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@\n`);
-    
+    output += chalk.hex(theme.info)(
+      `@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@\n`,
+    );
+
     for (const line of hunk.lines) {
       if (line.type === 'addition') {
         output += chalk.hex(theme.success)('+ ' + line.content) + '\n';
@@ -238,9 +245,9 @@ function formatBasicParsedDiff(diff: ParsedDiff): string {
         output += '  ' + line.content + '\n';
       }
     }
-    
+
     output += '\n';
   }
-  
+
   return output;
-} 
+}

@@ -1,6 +1,6 @@
 /**
  * PR Approval Command
- * 
+ *
  * Implements the command to approve GitHub pull requests.
  */
 
@@ -32,33 +32,33 @@ export interface ApprovePrOptions {
  */
 export async function approvePullRequest(
   prNumber: number | string,
-  options: ApprovePrOptions = {}
+  options: ApprovePrOptions = {},
 ): Promise<boolean> {
   // Convert prNumber to a number if it's a string
   const pullNumber = typeof prNumber === 'string' ? parseInt(prNumber, 10) : prNumber;
-  
+
   // Validate the PR number
   if (isNaN(pullNumber) || pullNumber <= 0) {
     throw new Error(`Invalid pull request number: ${prNumber}`);
   }
-  
+
   // Get the current GitHub repository
   const repoInfo = await getGitHubRepository();
   if (!repoInfo || !repoInfo.owner || !repoInfo.name) {
     throw new Error('Not in a GitHub repository. Please run from a GitHub repository directory.');
   }
-  
+
   const owner = repoInfo.owner;
   const repo = repoInfo.name;
-  
+
   // Set up API client
   const apiClient = new GitHubApiClient(authService, config);
   const repositoryService = new RepositoryService(apiClient);
-  
+
   try {
     // Get PR details including CI status
     const pr = await repositoryService.getPullRequest(owner, repo, pullNumber);
-    
+
     // Check CI status if not forcing approval
     if (!options.force && pr.ciStatus) {
       if (pr.ciStatus === 'failure') {
@@ -75,26 +75,26 @@ export async function approvePullRequest(
           chalk.yellow(`⚠️  Warning: CI checks are still running for PR #${pullNumber}`),
           `Title: ${pr.title}`,
           `Status: ${ciStatusDisplay}`,
-          'Do you still want to approve this PR?'
+          'Do you still want to approve this PR?',
         ].join('\n');
-        
+
         const shouldApprove = await confirm({
           message,
           defaultValue: false,
-          status: 'warning'
+          status: 'warning',
         });
-        
+
         if (!shouldApprove) {
           console.log('Approval canceled.');
           return false;
         }
       }
     }
-    
+
     // Approve the PR
     const comment = options.comment || 'LGTM 👍';
     await repositoryService.approvePullRequest(owner, repo, pullNumber, comment);
-    
+
     // Success message
     console.log(chalk.green(`✅ Successfully approved PR #${pullNumber}: "${pr.title}"`));
     return true;
@@ -102,10 +102,14 @@ export async function approvePullRequest(
     if (error instanceof NotFoundError) {
       console.error(chalk.red(`Error: PR #${pullNumber} not found in ${owner}/${repo}`));
     } else if (error instanceof PermissionError) {
-      console.error(chalk.red(`Error: You don't have permission to approve PR #${pullNumber} in ${owner}/${repo}`));
+      console.error(
+        chalk.red(
+          `Error: You don't have permission to approve PR #${pullNumber} in ${owner}/${repo}`,
+        ),
+      );
     } else {
       console.error(chalk.red(`Error: ${(error as Error).message}`));
     }
     return false;
   }
-} 
+}

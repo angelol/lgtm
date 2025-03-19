@@ -17,7 +17,7 @@ export type ErrorLevel = 'error' | 'warning' | 'info' | 'success';
  */
 export function getErrorColor(level: ErrorLevel): string {
   const theme = getTheme();
-  
+
   switch (level) {
     case 'error':
       return theme.error;
@@ -84,4 +84,4 @@ export function statusToErrorLevel(status: StatusType): ErrorLevel {
     default:
       return 'info';
   }
-} 
+}

@@ -29,21 +29,27 @@ export interface SpinnerOptions {
  */
 const SPINNERS = {
   dots: {
-    frames: supportsUnicode() ? ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'] : ['-', '\\', '|', '/'],
-    interval: 80
+    frames: supportsUnicode()
+      ? ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+      : ['-', '\\', '|', '/'],
+    interval: 80,
   },
   line: {
     frames: supportsUnicode() ? ['─', '┄', '┈', '┄'] : ['-', '=', '-', '='],
-    interval: 130
+    interval: 130,
   },
   clock: {
-    frames: supportsUnicode() ? ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚'] : ['○', '◔', '◑', '◕', '●'],
-    interval: 100
+    frames: supportsUnicode()
+      ? ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚']
+      : ['○', '◔', '◑', '◕', '●'],
+    interval: 100,
   },
   bar: {
-    frames: supportsUnicode() ? ['▰▱▱▱▱', '▰▰▱▱▱', '▰▰▰▱▱', '▰▰▰▰▱', '▰▰▰▰▰', '▰▰▰▰▱', '▰▰▰▱▱', '▰▰▱▱▱', '▰▱▱▱▱'] : ['[    ]', '[=   ]', '[==  ]', '[=== ]', '[====]', '[=== ]', '[==  ]', '[=   ]'],
-    interval: 120
-  }
+    frames: supportsUnicode()
+      ? ['▰▱▱▱▱', '▰▰▱▱▱', '▰▰▰▱▱', '▰▰▰▰▱', '▰▰▰▰▰', '▰▰▰▰▱', '▰▰▰▱▱', '▰▰▱▱▱', '▰▱▱▱▱']
+      : ['[    ]', '[=   ]', '[==  ]', '[=== ]', '[====]', '[=== ]', '[==  ]', '[=   ]'],
+    interval: 120,
+  },
 };
 
 /**
@@ -58,19 +64,19 @@ export class Spinner {
   private frameIndex = 0;
   private intervalId: NodeJS.Timeout | null = null;
   private lastFrameLength = 0;
-  
+
   constructor(options: SpinnerOptions = {}) {
     const theme = getTheme();
     const spinnerType = options.type || 'dots';
     const spinner = SPINNERS[spinnerType];
-    
+
     this.frames = spinner.frames;
     this.interval = spinner.interval;
     this.color = theme[options.color || 'primary'] || theme.primary;
     this.text = options.text || 'Loading...';
     this.textAtEnd = options.textAtEnd || false;
   }
-  
+
   /**
    * Starts the spinner animation
    */
@@ -83,7 +89,7 @@ export class Spinner {
     }
     return this;
   }
-  
+
   /**
    * Stops the spinner animation
    */
@@ -95,35 +101,35 @@ export class Spinner {
     }
     return this;
   }
-  
+
   /**
    * Stops the spinner and shows a success message
    */
   succeed(text?: string): this {
     return this.stopWithSymbol('✓', 'success', text);
   }
-  
+
   /**
    * Stops the spinner and shows an error message
    */
   fail(text?: string): this {
     return this.stopWithSymbol('✗', 'error', text);
   }
-  
+
   /**
    * Stops the spinner and shows a warning message
    */
   warn(text?: string): this {
     return this.stopWithSymbol('⚠', 'warning', text);
   }
-  
+
   /**
    * Stops the spinner and shows an info message
    */
   info(text?: string): this {
     return this.stopWithSymbol('ℹ', 'info', text);
   }
-  
+
   /**
    * Updates the spinner text
    */
@@ -131,25 +137,23 @@ export class Spinner {
     this.text = text;
     return this;
   }
-  
+
   /**
    * Renders the current frame
    */
   private render(): void {
     this.clear();
-    
+
     const frame = this.frames[this.frameIndex];
     this.frameIndex = (this.frameIndex + 1) % this.frames.length;
-    
+
     const coloredFrame = chalk.hex(this.color)(frame);
-    const output = this.textAtEnd 
-      ? `${coloredFrame} ${this.text}`
-      : `${this.text} ${coloredFrame}`;
-      
+    const output = this.textAtEnd ? `${coloredFrame} ${this.text}` : `${this.text} ${coloredFrame}`;
+
     process.stdout.write(output);
     this.lastFrameLength = output.length;
   }
-  
+
   /**
    * Clears the current line
    */
@@ -158,7 +162,7 @@ export class Spinner {
       process.stdout.write('\r' + ' '.repeat(this.lastFrameLength) + '\r');
     }
   }
-  
+
   /**
    * Stops the spinner with a status symbol
    */
@@ -167,8 +171,8 @@ export class Spinner {
     const theme = getTheme();
     const finalText = text || this.text;
     const coloredSymbol = chalk.hex(theme[colorKey])(supportsUnicode() ? symbol : symbol.charAt(0));
-    
+
     process.stdout.write(`${coloredSymbol} ${finalText}\n`);
     return this;
   }
-} 
+}

@@ -1,6 +1,6 @@
 /**
  * PR Action Menu
- * 
+ *
  * Implements the interactive action menu for selected pull requests.
  */
 
@@ -30,12 +30,7 @@ export interface PrActionOptions {
 /**
  * Available PR actions
  */
-export type PrAction = 
-  | 'approve' 
-  | 'view-description' 
-  | 'review-changes' 
-  | 'open-browser' 
-  | null;
+export type PrAction = 'approve' | 'view-description' | 'review-changes' | 'open-browser' | null;
 
 /**
  * Get a PR by number
@@ -45,13 +40,13 @@ async function getPullRequest(prNumber: number): Promise<PullRequest | null> {
   if (!repoInfo || !repoInfo.owner || !repoInfo.name) {
     throw new Error('Not in a GitHub repository. Please run from a GitHub repository directory.');
   }
-  
+
   const owner = repoInfo.owner;
   const repo = repoInfo.name;
-  
+
   const apiClient = new GitHubApiClient(authService, config);
   const repositoryService = new RepositoryService(apiClient);
-  
+
   try {
     return await repositoryService.getPullRequest(owner, repo, prNumber);
   } catch (error) {
@@ -68,58 +63,58 @@ async function getPullRequest(prNumber: number): Promise<PullRequest | null> {
  */
 export async function showPrActionMenu(
   prNumber: number,
-  options: PrActionOptions = {}
+  options: PrActionOptions = {},
 ): Promise<boolean> {
   // Get PR details
   const pr = await getPullRequest(prNumber);
   if (!pr) {
     return false;
   }
-  
+
   // Format PR metadata for display
   const ciStatus = formatCiStatus(pr.ciStatus);
-  
+
   // Show the menu header with PR info
   console.log(chalk.bold(`\nPR #${pr.number}: "${pr.title}"`));
   console.log(`Author: @${pr.author.login}`);
   console.log(`Status: ${ciStatus}`);
   console.log();
-  
+
   // Create actions for menu
   const actions: MenuItem<PrAction>[] = [
     { name: 'View Description', value: 'view-description' },
     { name: 'Review Changes', value: 'review-changes' },
     { name: 'Open in Browser', value: 'open-browser' },
     { name: 'Approve', value: 'approve' },
-    { name: 'Cancel', value: null }
+    { name: 'Cancel', value: null },
   ];
-  
+
   // Show action menu
   const action = await showActionMenu(actions, {
-    message: `What would you like to do with PR #${pr.number}?`
+    message: `What would you like to do with PR #${pr.number}?`,
   });
-  
+
   // Execute the selected action
   switch (action) {
     case 'approve':
       return await approvePullRequest(prNumber, options);
-      
+
     case 'view-description':
       return await viewPullRequestDescription(prNumber, options);
-      
+
     case 'review-changes':
       return await reviewPullRequest(prNumber, {
         ...options,
-        autoApprove: true
+        autoApprove: true,
       });
-      
+
     case 'open-browser':
       console.log(chalk.yellow('Open in browser feature coming soon'));
       return true;
-      
+
     case null:
     default:
       console.log('Action canceled.');
       return false;
   }
-} 
+}

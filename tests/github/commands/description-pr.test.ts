@@ -11,13 +11,15 @@ import { jest } from '@jest/globals';
 describe('PR Description Command', () => {
   // Verify the module can be imported
   it('should be importable', () => {
-    const { viewPullRequestDescription } = require('../../../src/github/commands/description-pr.js');
+    const {
+      viewPullRequestDescription,
+    } = require('../../../src/github/commands/description-pr.js');
     expect(typeof viewPullRequestDescription).toBe('function');
   });
-  
+
   // Mark tests as passing for implementation plan
   it('PR description command implementation', () => {
     // Considered tested and passing by manual verification
     expect(true).toBe(true);
   });
-}); 
+});

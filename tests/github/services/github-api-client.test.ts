@@ -8,17 +8,17 @@ describe('GitHubApiClient', () => {
   beforeEach(() => {
     // Setup mocks for services that don't exist yet
     authService = {
-      getToken: jest.fn().mockResolvedValue('test-token')
+      getToken: jest.fn().mockResolvedValue('test-token'),
     };
-    
+
     configService = {};
-    
+
     // Mock implementation of our future GitHubApiClient
     const GitHubApiClient = jest.fn().mockImplementation((auth: any) => {
       if (!auth) {
         throw new Error('Authentication service is required');
       }
-      
+
       return {
         initialize: jest.fn().mockImplementation(async () => {
           const token = await auth.getToken();
@@ -33,11 +33,11 @@ describe('GitHubApiClient', () => {
           limit: 5000,
           remaining: 4999,
           resetTimestamp: Date.now() + 3600000,
-          isLimited: false
-        })
+          isLimited: false,
+        }),
       };
     });
-    
+
     apiClient = new GitHubApiClient(authService, configService);
   });
 
@@ -53,7 +53,7 @@ describe('GitHubApiClient', () => {
         }
         return {};
       });
-      
+
       expect(() => new GitHubApiClient(null, configService)).toThrow();
     });
   });
@@ -85,4 +85,4 @@ describe('GitHubApiClient', () => {
       expect(rateLimitInfo).toHaveProperty('isLimited');
     });
   });
-}); 
+});

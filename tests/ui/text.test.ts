@@ -88,11 +88,7 @@ describe('Text Formatting', () => {
   describe('wrapText', () => {
     test('should wrap text at word boundaries to fit width', () => {
       const result = wrapText('This is a long sentence that needs to be wrapped.', 20);
-      expect(result).toEqual([
-        'This is a long',
-        'sentence that needs',
-        'to be wrapped.'
-      ]);
+      expect(result).toEqual(['This is a long', 'sentence that needs', 'to be wrapped.']);
     });
 
     test('should handle single-line text within width', () => {
@@ -114,4 +110,4 @@ describe('Text Formatting', () => {
       expect(separator().length).toBe(80);
     });
   });
-}); 
+});

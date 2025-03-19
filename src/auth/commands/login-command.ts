@@ -1,6 +1,6 @@
 /**
  * Authentication Login Command
- * 
+ *
  * Handles the `lgtm auth login` command.
  */
 
@@ -11,7 +11,7 @@ import { authService, AuthMethod } from '../services/auth-service.js';
 
 /**
  * Add the login command to the auth command
- * 
+ *
  * @param authCommand - The parent auth command
  */
 export function addLoginCommand(authCommand: Command): void {
@@ -22,10 +22,10 @@ export function addLoginCommand(authCommand: Command): void {
       try {
         // Check if already authenticated
         const existingStatus = await authService.getAuthStatus();
-        
+
         if (existingStatus) {
           console.log(`Already logged in as ${chalk.green(existingStatus.login)}`);
-          
+
           const { confirm } = await inquirer.prompt([
             {
               type: 'confirm',
@@ -34,15 +34,15 @@ export function addLoginCommand(authCommand: Command): void {
               default: false,
             },
           ]);
-          
+
           if (!confirm) {
             return;
           }
-          
+
           // Logout before continuing
           await authService.logout();
         }
-        
+
         // Prompt for authentication method
         const { method } = await inquirer.prompt([
           {
@@ -61,9 +61,9 @@ export function addLoginCommand(authCommand: Command): void {
             ],
           },
         ]);
-        
+
         let user;
-        
+
         if (method === AuthMethod.Browser) {
           user = await authService.loginWithBrowser();
         } else {
@@ -73,21 +73,23 @@ export function addLoginCommand(authCommand: Command): void {
               type: 'password',
               name: 'token',
               message: 'Enter your GitHub personal access token:',
-              validate: (input) => {
+              validate: input => {
                 if (!input) return 'Token is required';
                 if (input.length < 10) return 'Token seems too short';
                 return true;
               },
             },
           ]);
-          
+
           user = await authService.loginWithToken(token);
         }
-        
-        console.log(`\n${chalk.green('✓')} Authentication complete. You're now logged in as ${chalk.bold(user.login)}`);
+
+        console.log(
+          `\n${chalk.green('✓')} Authentication complete. You're now logged in as ${chalk.bold(user.login)}`,
+        );
       } catch (error) {
         console.error(`${chalk.red('Error:')} ${(error as Error).message}`);
         process.exit(1);
       }
     });
-} 
+}

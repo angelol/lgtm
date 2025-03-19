@@ -1,23 +1,19 @@
 /**
  * GitHub Module
- * 
+ *
  * Provides services for interacting with the GitHub API.
  */
 
 // Export types and classes
 export { GitHubApiClient, RateLimitInfo, RequestOptions } from './services/github-api-client.js';
-export { 
-  RepositoryService, 
-  Repository, 
-  PullRequest 
-} from './services/repository-service.js';
+export { RepositoryService, Repository, PullRequest } from './services/repository-service.js';
 export { ContentService } from './services/content-service.js';
 export {
   PullRequestDescription,
   FileChange,
   PullRequestDiff,
   ParsedMarkdown,
-  ParsedDiff
+  ParsedDiff,
 } from './models/content.js';
 
 // Export commands
@@ -36,5 +32,5 @@ import { authService } from '../auth/services/auth-service.js';
 
 // Create and export singleton instances
 export const githubApiClient = new GitHubApiClient(authService, config);
-export const repositoryService = new RepositoryService(githubApiClient); 
-export const contentService = new ContentService(githubApiClient); 
+export const repositoryService = new RepositoryService(githubApiClient);
+export const contentService = new ContentService(githubApiClient);

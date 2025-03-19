@@ -140,4 +140,4 @@ export const statusSymbol = (status: StatusType): string => {
  */
 export const coloredStatusSymbol = (status: StatusType): string => {
   return statusChalk(status)(statusSymbol(status));
-}; 
+};

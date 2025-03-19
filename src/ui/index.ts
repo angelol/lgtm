@@ -19,11 +19,7 @@ export * from './box.js';
 export * from './utils.js';
 
 // Export error formatting
-export {
-  formatError,
-  formatErrorWithLabel,
-  statusToErrorLevel,
-} from './error.js';
+export { formatError, formatErrorWithLabel, statusToErrorLevel } from './error.js';
 
 // Export selection interface
 export * from './selection.js';
@@ -56,4 +52,4 @@ export * from './table.js';
 export * from './pr-list.js';
 
 // Export file diff viewer component for file-by-file navigation
-export * from './file-diff-viewer.js'; 
+export * from './file-diff-viewer.js';

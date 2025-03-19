@@ -58,10 +58,10 @@ export interface MarkdownOptions {
 const DEFAULT_OPTIONS: MarkdownOptions = {
   width: process.stdout.columns || 80,
   codeOptions: {
-    highlight: true
+    highlight: true,
   },
   unescape: false,
-  showLinks: true
+  showLinks: true,
 };
 
 /**
@@ -72,16 +72,16 @@ const DEFAULT_OPTIONS: MarkdownOptions = {
  */
 export function renderMarkdown(markdown?: string, customOptions?: MarkdownOptions): string {
   if (!markdown) return '';
-  
+
   try {
     const theme = getTheme();
     const mergedOptions: MarkdownOptions = { ...DEFAULT_OPTIONS, ...customOptions };
-    
+
     // For test environment, just return the markdown as-is to avoid dependency issues
     if (process.env.NODE_ENV === 'test') {
       return markdown;
     }
-    
+
     // Create a new terminal renderer with theme colors
     const rendererOptions = {
       code: chalk.bgHex(theme.background).hex(theme.primary),
@@ -95,12 +95,12 @@ export function renderMarkdown(markdown?: string, customOptions?: MarkdownOption
       paragraph: chalk.hex(theme.normal),
       link: chalk.underline.hex(theme.info),
       href: chalk.underline.hex(theme.info),
-      ...mergedOptions
+      ...mergedOptions,
     };
-    
+
     const renderer = new TerminalRenderer(rendererOptions);
     marked.use({ renderer: renderer as any });
-    
+
     // Parse the markdown
     const result = marked.parse(markdown);
     return result.toString();
@@ -108,4 +108,4 @@ export function renderMarkdown(markdown?: string, customOptions?: MarkdownOption
     // In case of errors, just return the raw markdown
     return markdown;
   }
-} 
+}

@@ -27,7 +27,7 @@ export interface PrSelectionOptions {
 function formatPullRequestChoice(pr: PullRequest, theme: ColorTheme): string {
   const ciStatusText = formatCiStatus(pr.ciStatus);
   const timeAgo = formatDistanceToNow(new Date(pr.createdAt));
-  
+
   return `${chalk.hex(theme.highlight)('#' + pr.number)} | ${pr.title} | ${chalk.hex(theme.secondary)('@' + pr.author.login)} | ${chalk.hex(theme.muted)(timeAgo)} | ${ciStatusText}`;
 }
 
@@ -37,31 +37,31 @@ function formatPullRequestChoice(pr: PullRequest, theme: ColorTheme): string {
  */
 export async function selectPullRequest(
   pullRequests: PullRequest[],
-  options: PrSelectionOptions = {}
+  options: PrSelectionOptions = {},
 ): Promise<number | null> {
   const theme = options.theme || getTheme();
   const pageSize = options.pageSize || 10;
-  
+
   // Add a cancel option
   const choices = [
     ...pullRequests.map(pr => ({
       name: formatPullRequestChoice(pr, theme),
       value: pr.number,
-      short: `PR #${pr.number}`
+      short: `PR #${pr.number}`,
     })),
     new inquirer.Separator(),
-    { name: 'Cancel', value: null }
+    { name: 'Cancel', value: null },
   ];
-  
+
   const { selectedPr } = await inquirer.prompt([
     {
       type: 'list',
       name: 'selectedPr',
       message: options.message || 'Select a PR to approve:',
       pageSize,
-      choices
-    }
+      choices,
+    },
   ]);
-  
+
   return selectedPr;
-} 
+}

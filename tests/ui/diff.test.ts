@@ -13,7 +13,7 @@ function isParsedDiff(obj: any): obj is ParsedDiff {
 // Mock the renderDiff function
 jest.mock('../../src/ui/diff.js', () => {
   const actualModule = jest.requireActual('../../src/ui/diff.js') as any;
-  
+
   return {
     renderDiff: jest.fn().mockImplementation((diff: unknown) => {
       // Mock implementation that returns predictable output based on inputs
@@ -24,7 +24,7 @@ jest.mock('../../src/ui/diff.js', () => {
       }
       return '';
     }),
-    DiffOptions: actualModule.DiffOptions
+    DiffOptions: actualModule.DiffOptions,
   };
 });
 
@@ -50,7 +50,7 @@ index 1234567..abcdefg 100644
 +Line 2 modified
 +Line 3 added
  Line 4`;
-    
+
     const result = diffModule.renderDiff(diff);
     expect(result).toContain('String diff output with');
     expect(diffModule.renderDiff).toHaveBeenCalledWith(diff, undefined);
@@ -70,13 +70,13 @@ index 1234567..abcdefg 100644
             { content: 'Line 2', type: 'deletion' },
             { content: 'Line 2 modified', type: 'addition' },
             { content: 'Line 3 added', type: 'addition' },
-            { content: 'Line 4', type: 'context' }
-          ]
-        }
+            { content: 'Line 4', type: 'context' },
+          ],
+        },
       ],
-      language: 'javascript'
+      language: 'javascript',
     };
-    
+
     const result = diffModule.renderDiff(parsedDiff);
     expect(result).toContain('test.js');
     expect(result).toContain('1 hunks');
@@ -85,15 +85,15 @@ index 1234567..abcdefg 100644
 
   it('should accept custom options', () => {
     const diff = `diff --git a/file.txt b/file.txt`;
-    
+
     const options = {
       showLineNumbers: false,
-      showFilePaths: false
+      showFilePaths: false,
     };
-    
+
     diffModule.renderDiff(diff);
     diffModule.renderDiff(diff, options);
-    
+
     expect(diffModule.renderDiff).toHaveBeenCalledTimes(2);
     expect(diffModule.renderDiff).toHaveBeenCalledWith(diff, undefined);
     expect(diffModule.renderDiff).toHaveBeenCalledWith(diff, options);
@@ -109,7 +109,7 @@ index 1234567..abcdefg 100644
     // Invalid diff format
     const invalidDiff = 'Not a valid diff format';
     diffModule.renderDiff(invalidDiff);
-    
+
     expect(diffModule.renderDiff).toHaveBeenCalledWith(invalidDiff, undefined);
   });
 
@@ -122,19 +122,17 @@ index 1234567..abcdefg 100644
           oldLines: 1,
           newStart: 1,
           newLines: 1,
-          lines: [
-            { content: 'Line 1', type: 'context' }
-          ]
-        }
-      ]
+          lines: [{ content: 'Line 1', type: 'context' }],
+        },
+      ],
     };
-    
+
     // Test with and without showing file paths
     diffModule.renderDiff(parsedDiff, { showFilePaths: true });
     diffModule.renderDiff(parsedDiff, { showFilePaths: false });
-    
+
     expect(diffModule.renderDiff).toHaveBeenCalledTimes(2);
     expect(diffModule.renderDiff).toHaveBeenCalledWith(parsedDiff, { showFilePaths: true });
     expect(diffModule.renderDiff).toHaveBeenCalledWith(parsedDiff, { showFilePaths: false });
   });
-}); 
+});

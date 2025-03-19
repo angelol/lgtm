@@ -48,7 +48,7 @@ const mapBorderStyle = (style?: BoxStyle['borderStyle']): BoxenOptions['borderSt
  * Normalizes padding to boxen format
  */
 const normalizePadding = (
-  padding?: BoxStyle['padding']
+  padding?: BoxStyle['padding'],
 ): { top: number; right: number; bottom: number; left: number } | undefined => {
   if (padding === undefined) {
     return undefined;
@@ -75,7 +75,7 @@ const normalizePadding = (
  */
 export const createBox = (content: string, style: BoxStyle = {}): string => {
   const { width: termWidth } = getTerminalSize();
-  
+
   // Set default styles
   const {
     padding = 1,
@@ -99,7 +99,7 @@ export const createBox = (content: string, style: BoxStyle = {}): string => {
   } else if (width !== 'auto') {
     boxWidth = width;
   }
-  
+
   // Apply max width constraint
   if (maxWidth !== undefined && (boxWidth === undefined || boxWidth > maxWidth)) {
     boxWidth = maxWidth;
@@ -132,7 +132,7 @@ export const createBox = (content: string, style: BoxStyle = {}): string => {
     margin: normalizePadding(margin),
     borderStyle: mapBorderStyle(borderStyle),
     title: title,
-    titleAlignment: titleAlignment as 'center' | 'left' | 'right',
+    titleAlignment: titleAlignment,
     width: boxWidth,
   };
 
@@ -199,4 +199,4 @@ export const errorBox = (content: string, title?: string): string => {
     borderStyle: 'round',
     padding: [1, 2],
   });
-}; 
+};

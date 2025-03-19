@@ -50,13 +50,13 @@ describe('Markdown Renderer', () => {
     const options: MarkdownOptions = {
       width: 40,
       codeOptions: {
-        highlight: true
-      }
+        highlight: true,
+      },
     };
-    
+
     const defaultResult = renderMarkdown(markdown);
     const customResult = renderMarkdown(markdown, options);
-    
+
     // Different options should result in different output
     expect(customResult).not.toEqual(defaultResult);
   });
@@ -65,4 +65,4 @@ describe('Markdown Renderer', () => {
     expect(renderMarkdown('')).toBe('');
     expect(renderMarkdown(undefined)).toBe('');
   });
-}); 
+});

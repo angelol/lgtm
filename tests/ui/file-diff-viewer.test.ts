@@ -19,7 +19,7 @@ describe('FileDiffViewer', () => {
         changes: 8,
         isBinary: false,
         viewUrl: 'https://github.com/test/repo/file1.js',
-        patch: '@@ -1,3 +1,5 @@ file1 content'
+        patch: '@@ -1,3 +1,5 @@ file1 content',
       },
       {
         filename: 'file2.css',
@@ -29,7 +29,7 @@ describe('FileDiffViewer', () => {
         changes: 10,
         isBinary: false,
         viewUrl: 'https://github.com/test/repo/file2.css',
-        patch: '@@ -0,0 +1,10 @@ file2 content'
+        patch: '@@ -0,0 +1,10 @@ file2 content',
       },
       {
         filename: 'file3.md',
@@ -39,18 +39,18 @@ describe('FileDiffViewer', () => {
         changes: 4,
         isBinary: false,
         viewUrl: 'https://github.com/test/repo/file3.md',
-        patch: '@@ -1,5 +1,5 @@ file3 content'
-      }
+        patch: '@@ -1,5 +1,5 @@ file3 content',
+      },
     ];
-    
+
     mockDiff = {
       files: mockFiles,
       totalFiles: mockFiles.length,
       totalAdditions: 17,
       totalDeletions: 5,
-      totalChanges: 22
+      totalChanges: 22,
     };
-    
+
     // Reset mocks
     jest.clearAllMocks();
   });
@@ -68,20 +68,20 @@ describe('FileDiffViewer', () => {
 
   it('should navigate to the next file', () => {
     const viewer = new FileDiffViewer(mockDiff);
-    
+
     // Start at file index 0
     expect(viewer.getCurrentFileIndex()).toBe(0);
-    
+
     // Move to next file
     viewer.nextFile();
     expect(viewer.getCurrentFileIndex()).toBe(1);
     expect(viewer.getCurrentFile().filename).toBe('file2.css');
-    
+
     // Move to last file
     viewer.nextFile();
     expect(viewer.getCurrentFileIndex()).toBe(2);
     expect(viewer.getCurrentFile().filename).toBe('file3.md');
-    
+
     // Should not go beyond the last file
     viewer.nextFile();
     expect(viewer.getCurrentFileIndex()).toBe(2);
@@ -89,21 +89,21 @@ describe('FileDiffViewer', () => {
 
   it('should navigate to the previous file', () => {
     const viewer = new FileDiffViewer(mockDiff);
-    
+
     // Start with the last file
     viewer.setCurrentFileIndex(2);
     expect(viewer.getCurrentFileIndex()).toBe(2);
-    
+
     // Move to previous file
     viewer.previousFile();
     expect(viewer.getCurrentFileIndex()).toBe(1);
     expect(viewer.getCurrentFile().filename).toBe('file2.css');
-    
+
     // Move to first file
     viewer.previousFile();
     expect(viewer.getCurrentFileIndex()).toBe(0);
     expect(viewer.getCurrentFile().filename).toBe('file1.js');
-    
+
     // Should not go before the first file
     viewer.previousFile();
     expect(viewer.getCurrentFileIndex()).toBe(0);
@@ -111,17 +111,17 @@ describe('FileDiffViewer', () => {
 
   it('should check if there is a next or previous file', () => {
     const viewer = new FileDiffViewer(mockDiff);
-    
+
     // First file
     viewer.setCurrentFileIndex(0);
     expect(viewer.hasNextFile()).toBe(true);
     expect(viewer.hasPreviousFile()).toBe(false);
-    
+
     // Middle file
     viewer.setCurrentFileIndex(1);
     expect(viewer.hasNextFile()).toBe(true);
     expect(viewer.hasPreviousFile()).toBe(true);
-    
+
     // Last file
     viewer.setCurrentFileIndex(2);
     expect(viewer.hasNextFile()).toBe(false);
@@ -130,17 +130,17 @@ describe('FileDiffViewer', () => {
 
   it('should emit events when navigating between files', () => {
     const viewer = new FileDiffViewer(mockDiff);
-    
+
     const nextFileSpy = jest.fn();
     const previousFileSpy = jest.fn();
-    
+
     viewer.on('nextFile', nextFileSpy);
     viewer.on('previousFile', previousFileSpy);
-    
+
     viewer.nextFile();
     expect(nextFileSpy).toHaveBeenCalledWith(mockFiles[1], 1);
-    
+
     viewer.previousFile();
     expect(previousFileSpy).toHaveBeenCalledWith(mockFiles[0], 0);
   });
-}); 
+});

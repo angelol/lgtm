@@ -14,7 +14,7 @@ export const getTerminalSize = (): TerminalDimensions => {
   // Default to a reasonable fallback size if process.stdout is not available
   const columns = process.stdout?.columns || 80;
   const rows = process.stdout?.rows || 24;
-  
+
   return {
     width: columns,
     height: rows,
@@ -77,17 +77,19 @@ export const supportsColor = (): boolean => {
  */
 export const supportsUnicode = (): boolean => {
   if (process.platform === 'win32') {
-    return process.env.CI === 'true' || 
-           process.env.WT_SESSION !== undefined || // Windows Terminal
-           process.env.TERM_PROGRAM === 'vscode' ||
-           process.env.TERM?.includes('xterm') === true;
+    return (
+      process.env.CI === 'true' ||
+      process.env.WT_SESSION !== undefined || // Windows Terminal
+      process.env.TERM_PROGRAM === 'vscode' ||
+      process.env.TERM?.includes('xterm') === true
+    );
   }
-  
+
   return true;
 };
 
 /**
- * Returns either the Unicode character or a fallback for terminals 
+ * Returns either the Unicode character or a fallback for terminals
  * that don't support Unicode
  */
 export const safeSymbol = (unicode: string, fallback: string): string => {
@@ -97,12 +99,17 @@ export const safeSymbol = (unicode: string, fallback: string): string => {
 /**
  * Converts a percentage to a visual bar
  */
-export const percentageToBar = (percentage: number, length = 10, filledChar = '█', emptyChar = '░'): string => {
+export const percentageToBar = (
+  percentage: number,
+  length = 10,
+  filledChar = '█',
+  emptyChar = '░',
+): string => {
   // Ensure percentage is between 0 and 1
   const clampedPercentage = Math.max(0, Math.min(1, percentage));
   const filledLength = Math.round(clampedPercentage * length);
   const emptyLength = length - filledLength;
-  
+
   return filledChar.repeat(filledLength) + emptyChar.repeat(emptyLength);
 };
 
@@ -110,10 +117,10 @@ export const percentageToBar = (percentage: number, length = 10, filledChar = '�
  * Formats CI status for display with appropriate colors and symbols
  */
 export const formatCiStatus = (
-  status: 'success' | 'failure' | 'pending' | 'unknown' | null
+  status: 'success' | 'failure' | 'pending' | 'unknown' | null,
 ): string => {
   const theme = getTheme();
-  
+
   switch (status) {
     case 'success':
       return chalk.hex(theme.success)(`${safeSymbol('✓', '√')} CI Passing`);
@@ -126,4 +133,4 @@ export const formatCiStatus = (
     default:
       return chalk.hex(theme.muted)(`${safeSymbol('?', '?')} CI Unknown`);
   }
-}; 
+};
