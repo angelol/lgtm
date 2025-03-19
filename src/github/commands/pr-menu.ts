@@ -10,6 +10,7 @@ import { RepositoryService } from '../services/repository-service.js';
 import { GitHubApiClient } from '../services/github-api-client.js';
 import { approvePullRequest } from './approve-pr.js';
 import { reviewPullRequest } from './review-pr.js';
+import { viewPullRequestDescription } from './description-pr.js';
 import { formatCiStatus } from '../../ui/utils.js';
 import { PullRequest } from '../services/repository-service.js';
 import chalk from 'chalk';
@@ -104,8 +105,7 @@ export async function showPrActionMenu(
       return await approvePullRequest(prNumber, options);
       
     case 'view-description':
-      console.log(chalk.yellow('View description feature coming soon'));
-      return true;
+      return await viewPullRequestDescription(prNumber, options);
       
     case 'review-changes':
       return await reviewPullRequest(prNumber, {

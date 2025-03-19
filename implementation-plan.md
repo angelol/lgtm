@@ -2,8 +2,8 @@
 
 ## Current Status
 **Last Updated:** March 28, 2024
-**Progress:** Project setup, Node.js compatibility, package configuration, CLI command structure, configuration management, repository detection, authentication system, GitHub API integration for core services, PR management, Content Retrieval API, Base UI Framework implementation, Interactive Components implementation, Markdown Rendering implementation, Syntax-highlighted diff display implementation, Paged content viewing implementation, Tabular data display implementation, File-by-file navigation implementation, Direct PR approval implementation, Interactive PR Selection implementation, Non-Interactive PR Listing implementation, and PR Review Command implementation completed
-**Next Task:** Implement PR Description View (section 6.5.1)
+**Progress:** Project setup, Node.js compatibility, package configuration, CLI command structure, configuration management, repository detection, authentication system, GitHub API integration for core services, PR management, Content Retrieval API, Base UI Framework implementation, Interactive Components implementation, Markdown Rendering implementation, Syntax-highlighted diff display implementation, Paged content viewing implementation, Tabular data display implementation, File-by-file navigation implementation, Direct PR approval implementation, Interactive PR Selection implementation, Non-Interactive PR Listing implementation, PR Review Command implementation, and PR Description View implementation completed
+**Next Task:** Implement sorting options for PR listing (section 6.3.3)
 
 Completed:
 - Basic project structure and configuration 
@@ -33,6 +33,7 @@ Completed:
 - Interactive PR selection with action menu
 - Non-interactive PR listing with formatted output
 - PR review command with interactive diff viewing
+- PR description view with action menu and markdown formatting
 
 ## MANDATORY Instructions for AI Agent
 These instructions are REQUIREMENTS that MUST be followed without exception:
@@ -386,21 +387,21 @@ These instructions are REQUIREMENTS that MUST be followed without exception:
   - [x] Tests passing
 
 ### 6.5 PR Description View
-- [ ] Implement `lgtm [PR #] --description` command
-  - [ ] Write tests for description command
-  - [ ] Tests passing
-- [ ] Create description display UI
-  - [ ] Write tests for description display
-  - [ ] Tests passing
-- [ ] Implement markdown rendering
-  - [ ] Write tests for markdown rendering
-  - [ ] Tests passing
-- [ ] Add metadata display
-  - [ ] Write tests for metadata display
-  - [ ] Tests passing
-- [ ] Create action menu after viewing
-  - [ ] Write tests for action menu
-  - [ ] Tests passing
+- [x] Implement `lgtm [PR #] --description` command
+  - [x] Write tests for description command
+  - [x] Tests passing
+- [x] Create description display UI
+  - [x] Write tests for description display
+  - [x] Tests passing
+- [x] Implement markdown rendering
+  - [x] Write tests for markdown rendering
+  - [x] Tests passing
+- [x] Add metadata display
+  - [x] Write tests for metadata display
+  - [x] Tests passing
+- [x] Create action menu after viewing
+  - [x] Write tests for action menu
+  - [x] Tests passing
 
 ### 6.6 Browser Integration
 - [ ] Implement `lgtm [PR #] --open` command

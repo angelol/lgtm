@@ -16,7 +16,8 @@ import {
   listPullRequests, 
   displayPullRequests,
   showPrActionMenu,
-  reviewPullRequest
+  reviewPullRequest,
+  viewPullRequestDescription
 } from './github/index.js';
 
 /**
@@ -113,7 +114,15 @@ async function main(): Promise<void> {
           }
           
           if (options.description) {
-            console.log(chalk.yellow(`Description view for PR #${pr} coming soon`));
+            const success = await viewPullRequestDescription(pr, {
+              force: options.force || false,
+              comment: options.comment
+            });
+            
+            // Exit with appropriate code based on success
+            if (!success) {
+              process.exit(1);
+            }
             return;
           }
           
