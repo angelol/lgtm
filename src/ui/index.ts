@@ -37,4 +37,7 @@ export * from './spinner.js';
 export * from './pagination.js';
 
 // Export confirmation prompts
-export * from './confirm.js'; 
+export * from './confirm.js';
+
+// Export markdown renderer
+export * from './markdown.js'; 
