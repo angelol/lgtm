@@ -5,6 +5,7 @@ import { RepositoryService } from '../../../src/github/services/repository-servi
 import * as repository from '../../../src/utils/repository.js';
 import { GitHubRepo } from '../../../src/utils/repository.js';
 import { PullRequest } from '../../../src/github/services/repository-service.js';
+import { confirmFailingCi, confirm } from '../../../src/ui/confirm.js';
 
 // Mock the repository utility functions
 jest.mock('../../../src/utils/repository.js', () => ({
@@ -13,6 +14,9 @@ jest.mock('../../../src/utils/repository.js', () => ({
 
 // Mock the GitHubApiClient
 jest.mock('../../../src/github/services/github-api-client.js');
+
+// Mock the UI components
+jest.mock('../../../src/ui/confirm.js');
 
 // Mock the RepositoryService
 jest.mock('../../../src/github/services/repository-service.js', () => {
@@ -23,12 +27,6 @@ jest.mock('../../../src/github/services/repository-service.js', () => {
     })),
   };
 });
-
-// Mock the confirm prompt
-jest.mock('../../../src/ui/confirm.js', () => ({
-  confirm: jest.fn().mockResolvedValue(true),
-  confirmFailingCi: jest.fn().mockResolvedValue(true),
-}));
 
 // Mock console.log and console.error
 console.log = jest.fn();
@@ -97,8 +95,7 @@ describe('PR Approval Command', () => {
       ciStatus: 'failure',
     } as PullRequest);
 
-    const confirmFailingCiMock = require('../../../src/ui/confirm.js')
-      .confirmFailingCi as jest.Mock;
+    const confirmFailingCiMock = confirmFailingCi as jest.Mock;
 
     const result = await approvePullRequest(123);
 
@@ -115,7 +112,7 @@ describe('PR Approval Command', () => {
       ciStatus: 'pending',
     } as PullRequest);
 
-    const confirmMock = require('../../../src/ui/confirm.js').confirm as jest.Mock;
+    const confirmMock = confirm as jest.Mock;
 
     const result = await approvePullRequest(123);
 
@@ -132,8 +129,7 @@ describe('PR Approval Command', () => {
       ciStatus: 'failure',
     } as PullRequest);
 
-    const confirmFailingCiMock = require('../../../src/ui/confirm.js')
-      .confirmFailingCi as jest.Mock;
+    const confirmFailingCiMock = confirmFailingCi as jest.Mock;
 
     const result = await approvePullRequest(123, { force: true });
 

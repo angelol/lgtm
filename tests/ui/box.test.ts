@@ -3,11 +3,10 @@
  */
 
 import { createBox, infoBox, successBox, warningBox, errorBox } from '../../src/ui/box.js';
-import * as boxen from 'boxen';
 
 // Mock boxen module
 jest.mock('boxen', () => {
-  return () => 'BOXEN-MOCK: Test Content';
+  return (): string => 'BOXEN-MOCK: Test Content';
 });
 
 describe('Box Components', () => {

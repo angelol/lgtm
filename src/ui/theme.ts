@@ -103,14 +103,14 @@ export const getStatusColor = (status: StatusType): string => {
 /**
  * Gets a chalk instance with the specified color from the active theme
  */
-export const themeChalk = (color: keyof ColorTheme) => {
+export const themeChalk = (color: keyof ColorTheme): ReturnType<typeof chalk.hex> => {
   return chalk.hex(getColor(color));
 };
 
 /**
  * Gets a chalk instance for the specified status
  */
-export const statusChalk = (status: StatusType) => {
+export const statusChalk = (status: StatusType): ReturnType<typeof chalk.hex> => {
   return chalk.hex(getStatusColor(status));
 };
 

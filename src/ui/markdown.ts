@@ -103,7 +103,8 @@ export function renderMarkdown(markdown?: string, customOptions?: MarkdownOption
 
     // Parse the markdown
     const result = marked.parse(markdown);
-    return result.toString();
+    // Use explicit conversion to string to avoid no-base-to-string warning
+    return result as string;
   } catch (error) {
     // In case of errors, just return the raw markdown
     return markdown;

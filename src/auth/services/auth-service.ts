@@ -66,7 +66,7 @@ export class AuthService {
         process.stdin.resume();
 
         // Create one-time event handler for user input
-        const handleInput = (_: Buffer) => {
+        const handleInput = (_: Buffer): void => {
           // Clean up stdin configuration
           process.stdin.pause();
           process.stdin.removeListener('data', handleInput);
@@ -123,7 +123,7 @@ export class AuthService {
       }
 
       // Initialize Octokit with saved token
-      await this.initOctokit(credentials.token);
+      this.initOctokit(credentials.token);
 
       // Get user information
       const { data } = await this.octokit!.rest.users.getAuthenticated();
@@ -175,7 +175,7 @@ export class AuthService {
       throw new Error('Not authenticated. Please run `lgtm auth login` first.');
     }
 
-    await this.initOctokit(credentials.token);
+    this.initOctokit(credentials.token);
 
     return this.octokit!;
   }
@@ -228,7 +228,7 @@ export class AuthService {
    *
    * @param token - GitHub token
    */
-  private async initOctokit(token: string): Promise<void> {
+  private initOctokit(token: string): void {
     const baseUrl = config.get<string>('github.apiBaseUrl', 'https://api.github.com');
 
     this.octokit = new Octokit({
@@ -247,7 +247,7 @@ export class AuthService {
    */
   private async validateAndSaveToken(token: string, method: AuthMethod): Promise<GitHubUser> {
     // Initialize Octokit with the token
-    await this.initOctokit(token);
+    this.initOctokit(token);
 
     try {
       // Get user information to validate the token

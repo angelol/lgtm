@@ -30,8 +30,11 @@ jest.mock(
 // Mock chalk to avoid ANSI color codes in test output
 jest.mock('chalk', () => {
   return {
-    hex: () => (text: string) => text,
-    bold: (text: string) => text,
+    hex:
+      () =>
+      (text: string): string =>
+        text,
+    bold: (text: string): string => text,
   };
 });
 
@@ -148,7 +151,11 @@ describe('PrListDisplay', () => {
     expect(output).toBeDefined();
 
     // Also check if the labels column option is enabled
-    const hasLabels = (prListDisplay as any).options.showLabels;
+    interface PrListDisplayOptions {
+      showLabels: boolean;
+    }
+    const hasLabels = (prListDisplay as unknown as { options: PrListDisplayOptions }).options
+      .showLabels;
     expect(hasLabels).toBe(true);
   });
 

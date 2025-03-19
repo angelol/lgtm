@@ -7,6 +7,7 @@ import * as repository from '../../../src/utils/repository.js';
 import { GitHubRepo } from '../../../src/utils/repository.js';
 import { PullRequest } from '../../../src/github/services/repository-service.js';
 import { FileChange } from '../../../src/github/models/content.js';
+import { FileDiffViewer, showFileDiff } from '../../../src/ui/file-diff-viewer.js';
 
 // Mock the repository utility functions
 jest.mock('../../../src/utils/repository.js', () => ({
@@ -36,18 +37,19 @@ jest.mock('../../../src/github/services/content-service.js', () => {
 });
 
 // Mock the FileDiffViewer
-jest.mock('../../../src/ui/file-diff-viewer.js', () => ({
-  showFileDiff: jest.fn().mockResolvedValue({}),
-  FileDiffViewer: jest.fn().mockImplementation(() => ({
-    start: jest.fn().mockResolvedValue({}),
-    on: jest.fn((event, callback) => {
-      if (event === 'approve') {
-        callback();
-      }
-      return { on: jest.fn() };
-    }),
-  })),
-}));
+jest.mock('../../../src/ui/file-diff-viewer.js', () => {
+  return {
+    FileDiffViewer: jest.fn().mockImplementation(() => ({
+      on: jest.fn().mockImplementation((event, callback) => {
+        if (event === 'approve') setTimeout(() => callback(), 0);
+        return { on: jest.fn() };
+      }),
+      render: jest.fn(),
+      destroy: jest.fn(),
+    })),
+    showFileDiff: jest.fn().mockResolvedValue('approve'),
+  };
+});
 
 // Mock the confirm prompt
 jest.mock('../../../src/ui/confirm.js', () => ({
@@ -128,7 +130,6 @@ describe('PR Review Command', () => {
   });
 
   it('should approve PR after review if approved', async () => {
-    const FileDiffViewer = require('../../../src/ui/file-diff-viewer.js').FileDiffViewer;
     const fileDiffViewerInstance = new FileDiffViewer({});
 
     // Simulate 'approve' event emission
@@ -141,9 +142,8 @@ describe('PR Review Command', () => {
   });
 
   it('should not approve PR if review was canceled', async () => {
-    // Mock the FileDiffViewer to simulate cancellation
-    const showFileDiff = require('../../../src/ui/file-diff-viewer.js').showFileDiff as jest.Mock;
-    showFileDiff.mockResolvedValue('quit');
+    // Mock the showFileDiff function to simulate cancellation
+    (showFileDiff as jest.Mock).mockResolvedValue('quit');
 
     const result = await reviewPullRequest(123, { autoApprove: true });
 

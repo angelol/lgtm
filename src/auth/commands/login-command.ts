@@ -73,7 +73,7 @@ export function addLoginCommand(authCommand: Command): void {
               type: 'password',
               name: 'token',
               message: 'Enter your GitHub personal access token:',
-              validate: input => {
+              validate: (input: string): string | boolean => {
                 if (!input) return 'Token is required';
                 if (input.length < 10) return 'Token seems too short';
                 return true;

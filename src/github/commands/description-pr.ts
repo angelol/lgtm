@@ -124,7 +124,7 @@ export async function viewPullRequestDescription(
 
       // Handle action if any
       if (action) {
-        return await handleDescriptionAction(action, pr.number, pr.title, options);
+        return await handleDescriptionAction(action, pr.number, options);
       }
     }
 
@@ -142,7 +142,7 @@ export async function viewPullRequestDescription(
       message: `What would you like to do with PR #${pr.number}?`,
     });
 
-    return await handleDescriptionAction(selectedAction, pr.number, pr.title, options);
+    return await handleDescriptionAction(selectedAction, pr.number, options);
   } catch (error) {
     console.error(chalk.red(`Error: ${(error as Error).message}`));
     return false;
@@ -153,14 +153,12 @@ export async function viewPullRequestDescription(
  * Handles the action selected after viewing PR description
  * @param action The selected action
  * @param prNumber The PR number
- * @param prTitle The PR title
  * @param options Options for the action
  * @returns Promise resolving to true if successful, false if not
  */
 async function handleDescriptionAction(
   action: DescriptionAction,
   prNumber: number,
-  prTitle: string,
   options: DescriptionPrOptions = {},
 ): Promise<boolean> {
   switch (action) {

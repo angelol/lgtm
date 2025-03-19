@@ -24,7 +24,7 @@ import {
  * Main entry point function
  * @returns {Promise<void>}
  */
-async function main(): Promise<void> {
+function main(): void {
   // Verify Node.js version
   verifyNodeVersion();
 
@@ -237,7 +237,4 @@ async function main(): Promise<void> {
 }
 
 // Run the main function
-main().catch(error => {
-  console.error(chalk.red('Error:'), error);
-  process.exit(1);
-});
+main();

@@ -11,15 +11,16 @@ describe('Version Check Utility', () => {
   const originalExit = process.exit;
   const originalConsoleError = console.error;
 
-  let mockExit: jest.Mock;
-  let mockConsoleError: jest.Mock;
+  let mockExit: jest.SpyInstance;
+  let mockConsoleError: jest.SpyInstance;
 
   beforeEach(() => {
     // Mock process.exit and console.error
-    mockExit = jest.fn() as unknown as jest.Mock;
-    mockConsoleError = jest.fn();
+    mockExit = jest.fn() as jest.SpyInstance;
+    mockConsoleError = jest.fn() as jest.SpyInstance;
 
-    process.exit = mockExit as any;
+    // Type assertion needed for mocking a NodeJS.Process method
+    process.exit = mockExit as unknown as (code?: number) => never;
     console.error = mockConsoleError;
   });
 

@@ -2,8 +2,7 @@
  * Tests for Pagination Component
  */
 
-import { Paginator, PaginationOptions } from '../../src/ui/pagination.js';
-import { getTheme } from '../../src/ui/theme.js';
+import { Paginator } from '../../src/ui/pagination.js';
 
 describe('Pagination Component', () => {
   // Create test data with 25 items
@@ -90,7 +89,8 @@ describe('Pagination Component', () => {
   it('should render items using custom formatter', () => {
     const paginator = new Paginator(testItems, {
       pageSize: 5,
-      itemFormatter: (item, index) => `${index + 1} - ${item.toUpperCase()}`,
+      itemFormatter: (item: string, index: number): string =>
+        `${index + 1} - ${item.toUpperCase()}`,
     });
 
     const renderedItems = paginator.renderItems();

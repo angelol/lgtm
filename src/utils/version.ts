@@ -114,7 +114,7 @@ export function verifyNodeVersion(
 export function isApiAvailable(apiCheckFn: () => boolean): boolean {
   try {
     return apiCheckFn();
-  } catch (error) {
+  } catch (_) {
     return false;
   }
 }
@@ -147,10 +147,13 @@ export const features = {
    */
   hasAsyncLocalStorage: (): boolean => {
     try {
-      // Dynamic import to avoid syntax errors in Node.js versions that don't support it
-      const nodeAsyncHooks = new Function('return require("async_hooks")')();
-      return typeof nodeAsyncHooks.AsyncLocalStorage === 'function';
-    } catch (error) {
+      // AsyncLocalStorage was added in Node.js 13.10.0 and 12.17.0
+      // This approach avoids requiring the module directly
+      const version = process.versions.node;
+      const [major, minor] = version.split('.').map(Number);
+
+      return (major === 12 && minor >= 17) || (major === 13 && minor >= 10) || major >= 14;
+    } catch (_) {
       return false;
     }
   },

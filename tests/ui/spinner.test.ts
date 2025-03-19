@@ -3,10 +3,9 @@
  */
 
 import { Spinner, SpinnerOptions } from '../../src/ui/spinner.js';
-import { getTheme } from '../../src/ui/theme.js';
 
 // Mock stdout write to avoid actual terminal output
-const originalStdoutWrite = process.stdout.write;
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 let stdoutOutput: string[] = [];
 
 describe('Spinner Component', () => {
@@ -14,14 +13,14 @@ describe('Spinner Component', () => {
     // Reset captured output
     stdoutOutput = [];
 
-    // Mock process.stdout.write
-    process.stdout.write = jest.fn((str: string | Uint8Array) => {
+    // Mock process.stdout.write with arrow function
+    process.stdout.write = ((str: string | Uint8Array): boolean => {
       stdoutOutput.push(str.toString());
       return true;
-    });
+    }) as typeof process.stdout.write;
 
     // Mock setInterval to immediately invoke the callback instead of waiting
-    jest.spyOn(global, 'setInterval').mockImplementation(callback => {
+    jest.spyOn(global, 'setInterval').mockImplementation((callback: () => void) => {
       callback();
       return { ref: {} } as unknown as NodeJS.Timeout;
     });
@@ -94,7 +93,8 @@ describe('Spinner Component', () => {
     spinner.setText('Updated text');
 
     // Manually trigger a re-render since we mocked interval
-    (global.setInterval as jest.Mock).mock.calls[0][0]();
+    const setIntervalMock = global.setInterval as jest.MockedFunction<typeof setInterval>;
+    setIntervalMock.mock.calls[0][0]();
 
     // Verify output contains the updated text
     const output = stdoutOutput.join('');

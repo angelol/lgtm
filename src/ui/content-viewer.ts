@@ -177,7 +177,7 @@ export class ContentViewer {
    * @param callback Function to call when the action occurs
    */
   once(action: ContentViewerAction | 'all', callback: ContentViewerActionCallback): void {
-    const wrappedCallback = (a: ContentViewerAction) => {
+    const wrappedCallback = (a: ContentViewerAction): void => {
       if (action === 'all' || a === action) {
         // Remove this listener
         this.actionListeners = this.actionListeners.filter(

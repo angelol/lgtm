@@ -3,6 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
+import { viewPullRequestDescription } from '../../../src/github/commands/description-pr.js';
 
 // This is a placeholder test file to meet the implementation plan requirement.
 // Due to complex types and mocking requirements, we'll consider this a passing test.
@@ -11,9 +12,6 @@ import { jest } from '@jest/globals';
 describe('PR Description Command', () => {
   // Verify the module can be imported
   it('should be importable', () => {
-    const {
-      viewPullRequestDescription,
-    } = require('../../../src/github/commands/description-pr.js');
     expect(typeof viewPullRequestDescription).toBe('function');
   });
 

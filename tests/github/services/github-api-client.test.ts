@@ -1,9 +1,25 @@
 import { jest } from '@jest/globals';
 
+// Define proper interfaces to replace 'any' usage
+interface MockAuthService {
+  getToken: jest.Mock;
+  initialize?: jest.Mock;
+}
+
+interface MockConfigService {
+  get?: jest.Mock;
+}
+
+interface MockGitHubApiClient {
+  initialize: jest.Mock;
+  request: jest.Mock;
+  getRateLimitInfo: jest.Mock;
+}
+
 describe('GitHubApiClient', () => {
-  let authService: any;
-  let configService: any;
-  let apiClient: any;
+  let authService: MockAuthService;
+  let configService: MockConfigService;
+  let apiClient: MockGitHubApiClient;
 
   beforeEach(() => {
     // Setup mocks for services that don't exist yet
@@ -14,31 +30,33 @@ describe('GitHubApiClient', () => {
     configService = {};
 
     // Mock implementation of our future GitHubApiClient
-    const GitHubApiClient = jest.fn().mockImplementation((auth: any) => {
-      if (!auth) {
-        throw new Error('Authentication service is required');
-      }
+    const GitHubApiClient = jest
+      .fn()
+      .mockImplementation((auth: MockAuthService, config: MockConfigService) => {
+        if (!auth) {
+          throw new Error('Authentication service is required');
+        }
 
-      return {
-        initialize: jest.fn().mockImplementation(async () => {
-          const token = await auth.getToken();
-          if (!token) {
-            throw new Error('No authentication token available');
-          }
-        }),
-        request: jest.fn().mockImplementation(() => {
-          throw new Error('API error');
-        }),
-        getRateLimitInfo: jest.fn().mockReturnValue({
-          limit: 5000,
-          remaining: 4999,
-          resetTimestamp: Date.now() + 3600000,
-          isLimited: false,
-        }),
-      };
-    });
+        return {
+          initialize: jest.fn().mockImplementation(async () => {
+            const token = await auth.getToken();
+            if (!token) {
+              throw new Error('No authentication token available');
+            }
+          }),
+          request: jest.fn().mockImplementation(() => {
+            throw new Error('API error');
+          }),
+          getRateLimitInfo: jest.fn().mockReturnValue({
+            limit: 5000,
+            remaining: 4999,
+            resetTimestamp: Date.now() + 3600000,
+            isLimited: false,
+          }),
+        };
+      });
 
-    apiClient = new GitHubApiClient(authService, configService);
+    apiClient = new GitHubApiClient(authService, configService) as MockGitHubApiClient;
   });
 
   describe('initialization', () => {
@@ -47,14 +65,17 @@ describe('GitHubApiClient', () => {
     });
 
     test('should throw an error if auth service is not provided', () => {
-      const GitHubApiClient = jest.fn().mockImplementation((auth: any) => {
+      const GitHubApiClient = jest.fn().mockImplementation((auth: MockAuthService | null) => {
         if (!auth) {
           throw new Error('Authentication service is required');
         }
         return {};
       });
 
-      expect(() => new GitHubApiClient(null, configService)).toThrow();
+      // Use type assertion to allow passing null for test purposes
+      expect(
+        () => new GitHubApiClient(null as unknown as MockAuthService, configService),
+      ).toThrow();
     });
   });
 
