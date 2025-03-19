@@ -90,41 +90,53 @@ export async function viewPullRequestDescription(
     if (!description.body.trim()) {
       console.log('\n*No description provided*');
     } else {
-      // Render the markdown
-      const renderedMarkdown = renderMarkdown(description.body);
+      try {
+        // Render the markdown
+        const renderedMarkdown = renderMarkdown(description.body);
 
-      // Create content viewer with rendered markdown
-      const content = renderedMarkdown.split('\n');
+        // Create content viewer with rendered markdown
+        const content = renderedMarkdown.split('\n');
 
-      const viewer = new ContentViewer(content, {
-        title: `PR #${pr.number} Description`,
-        additionalActions: {
-          o: 'Open in browser',
-          a: 'Approve PR',
-          r: 'View changes',
-        },
-      });
+        // Make sure content is not empty
+        if (!content || content.length === 0) {
+          console.log('\n*Empty description content*');
+          return true;
+        }
 
-      // Create a promise to handle custom actions
-      const actionPromise = new Promise<DescriptionAction>(resolve => {
-        // Listen for user-defined actions
-        viewer.on('o', () => resolve('open'));
-        viewer.on('a', () => resolve('approve'));
-        viewer.on('r', () => resolve('review'));
+        const viewer = new ContentViewer(content, {
+          title: `PR #${pr.number} Description`,
+          additionalActions: {
+            o: 'Open in browser',
+            a: 'Approve PR',
+            r: 'View changes',
+          },
+        });
 
-        // Also listen for quit to resolve with null
-        viewer.on('quit', () => resolve(null));
-      });
+        // Create a promise to handle custom actions
+        const actionPromise = new Promise<DescriptionAction>(resolve => {
+          // Listen for user-defined actions
+          viewer.on('o', () => resolve('open'));
+          viewer.on('a', () => resolve('approve'));
+          viewer.on('r', () => resolve('review'));
 
-      // Start the viewer (which returns a promise that resolves when it closes)
-      const viewerStartPromise = viewer.start();
+          // Also listen for quit to resolve with null
+          viewer.on('quit', () => resolve(null));
+        });
 
-      // Wait for either the viewer to close or an action to be selected
-      const action = await Promise.race([viewerStartPromise.then(() => null), actionPromise]);
+        // Start the viewer (which returns a promise that resolves when it closes)
+        const viewerStartPromise = viewer.start();
 
-      // Handle action if any
-      if (action) {
-        return await handleDescriptionAction(action, pr.number, options);
+        // Wait for either the viewer to close or an action to be selected
+        const action = await Promise.race([viewerStartPromise.then(() => null), actionPromise]);
+
+        // Handle action if any
+        if (action) {
+          return await handleDescriptionAction(action, pr.number, options);
+        }
+      } catch (error) {
+        console.error(chalk.red(`Error displaying description: ${(error as Error).message}`));
+        console.log('\nRaw description:\n');
+        console.log(description.body);
       }
     }
 

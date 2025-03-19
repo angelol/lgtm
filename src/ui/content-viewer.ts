@@ -89,7 +89,11 @@ export class ContentViewer {
    * @param options - Configuration options
    */
   constructor(content: string | string[], options: ContentViewerOptions = {}) {
-    this.content = typeof content === 'string' ? content.split('\n') : content;
+    // Ensure content is always an array and never undefined
+    this.content = typeof content === 'string' 
+      ? (content ? content.split('\n') : ['']) 
+      : (Array.isArray(content) ? (content.length > 0 ? content : ['']) : ['']);
+    
     this.options = options;
     this.theme = options.theme || getTheme();
     this.keyBindings = { ...DEFAULT_KEY_BINDINGS, ...options.keyBindings };
@@ -249,24 +253,26 @@ export class ContentViewer {
    * Move to the next page of content
    */
   nextPage(): void {
-    const contentHeight = this.getContentHeight();
-    const maxLine = Math.max(0, this.content.length - contentHeight);
-
-    this.currentLine = Math.min(this.currentLine + contentHeight, maxLine);
-    this.render();
+    if (this.hasNextPage()) {
+      const visibleLines = this.getContentHeight();
+      this.currentLine = Math.min(this.currentLine + visibleLines, this.content.length - 1);
+      this.render();
+    }
   }
 
   /**
    * Move to the previous page of content
    */
   previousPage(): void {
-    const contentHeight = this.getContentHeight();
-    this.currentLine = Math.max(0, this.currentLine - contentHeight);
-    this.render();
+    if (this.hasPreviousPage()) {
+      const visibleLines = this.getContentHeight();
+      this.currentLine = Math.max(this.currentLine - visibleLines, 0);
+      this.render();
+    }
   }
 
   /**
-   * Toggle display of help information
+   * Toggle help display
    */
   toggleHelp(): void {
     this.showingHelp = !this.showingHelp;
@@ -274,148 +280,187 @@ export class ContentViewer {
   }
 
   /**
-   * Get the available height for content
+   * Get available height for content display
    */
   private getContentHeight(): number {
-    const maxHeight = this.options.maxHeight || this.terminalHeight;
-    let reservedLines = 0;
+    // If we have a fixed height option, use that
+    if (this.options.maxHeight) {
+      return this.options.maxHeight;
+    }
 
-    // Space for title
+    const terminalHeight = this.terminalHeight;
+
+    // Calculate space needed for UI elements
+    let uiElementsHeight = 1; // At least 1 for the controls
+
+    // Title takes 2 lines (title + separator)
     if (this.options.title) {
-      reservedLines += 2; // Title + empty line
+      uiElementsHeight += 2;
     }
 
-    // Space for controls footer
-    reservedLines += 2; // Controls + empty line
-
-    // Space for help if showing
-    if (this.showingHelp || this.options.showHelp) {
-      reservedLines += 4; // Help takes about 4 lines
+    // Help takes 3+ lines
+    if (this.showingHelp) {
+      const additionalActions = this.options.additionalActions || {};
+      const additionalActionsCount = Object.keys(additionalActions).length;
+      uiElementsHeight += 3 + Math.ceil(additionalActionsCount / 2);
     }
 
-    return Math.max(5, maxHeight - reservedLines);
+    // Calculate available space
+    const availableHeight = Math.max(1, terminalHeight - uiElementsHeight);
+
+    return availableHeight;
   }
 
   /**
-   * Check if there is more content after the current view
+   * Check if there are more pages of content ahead
    */
   hasNextPage(): boolean {
-    return this.currentLine + this.getContentHeight() < this.content.length;
+    const visibleLines = this.getContentHeight();
+    return this.content.length > 0 && this.currentLine + visibleLines < this.content.length;
   }
 
   /**
-   * Check if there is content before the current view
+   * Check if there are more pages of content behind
    */
   hasPreviousPage(): boolean {
-    return this.currentLine > 0;
+    return this.content.length > 0 && this.currentLine > 0;
   }
 
   /**
    * Render the content viewer
    */
   render(): void {
-    if (!this.isActive) {
+    if (!this.isActive || !this.content || this.content.length === 0) {
+      // Handle empty content gracefully
+      console.clear();
+      if (this.options.title) {
+        console.log(chalk.bold(this.options.title));
+        console.log(chalk.dim('─'.repeat(this.options.title.length)));
+      }
+      console.log('\n*No content to display*\n');
+      console.log(chalk.dim('Press q to quit'));
       return;
     }
 
     console.clear();
 
-    // Render title if present
+    // Render title if provided
     if (this.options.title) {
-      console.log(chalk.bold.hex(this.theme.primary)(this.options.title));
-      console.log();
+      console.log(chalk.bold(this.options.title));
+      console.log(chalk.dim('─'.repeat(this.options.title.length)));
     }
 
-    // Calculate available height
-    const contentHeight = this.getContentHeight();
-    const visibleContent = this.content.slice(this.currentLine, this.currentLine + contentHeight);
+    const visibleLines = this.getContentHeight();
+    const endLine = Math.min(this.currentLine + visibleLines, this.content.length);
 
-    // Render content with line numbers if enabled
-    if (this.options.showLineNumbers) {
-      const maxLineNumberWidth = String(this.currentLine + contentHeight).length;
-
-      visibleContent.forEach((line, i) => {
-        const lineNumber = String(this.currentLine + i + 1).padStart(maxLineNumberWidth, ' ');
-        console.log(`${chalk.hex(this.theme.muted)(lineNumber)} | ${line}`);
-      });
-    } else {
-      visibleContent.forEach(line => console.log(line));
+    // Display content lines
+    for (let i = this.currentLine; i < endLine; i++) {
+      const line = this.content[i] || ''; // Ensure we have a string even if undefined
+      
+      // Show line numbers if requested
+      if (this.options.showLineNumbers) {
+        const lineNumber = String(i + 1).padStart(3, ' ');
+        console.log(`${chalk.dim(lineNumber)} ${line}`);
+      } else {
+        console.log(line);
+      }
     }
 
-    // Fill empty space if content is shorter than available height
-    const emptyLines = contentHeight - visibleContent.length;
-    for (let i = 0; i < emptyLines; i++) {
-      console.log();
-    }
-
-    // Render controls
-    console.log();
+    // Show pagination info and controls
     console.log(this.renderControls());
 
-    // Render help if enabled
-    if (this.showingHelp || this.options.showHelp) {
-      console.log();
+    // Show help if requested
+    if (this.showingHelp) {
       console.log(this.renderHelp());
     }
   }
 
   /**
-   * Render navigation controls
+   * Render the control bar
    */
   private renderControls(): string {
-    const { hasNextPage, hasPreviousPage } = this;
+    const { theme } = this;
+    const startLine = this.currentLine + 1; // 1-indexed for display
+    const endLine = Math.min(this.currentLine + this.getContentHeight(), this.content.length);
+    const totalLines = this.content.length;
 
-    const prevBtn = hasPreviousPage()
-      ? chalk.hex(this.theme.primary)(`${safeSymbol('◀', '<')} Prev (p)`)
-      : chalk.hex(this.theme.muted)(`${safeSymbol('◀', '<')} Prev (p)`);
-
-    const nextBtn = hasNextPage()
-      ? chalk.hex(this.theme.primary)(`Next (n) ${safeSymbol('▶', '>')}`)
-      : chalk.hex(this.theme.muted)(`Next (n) ${safeSymbol('▶', '>')}`);
-
-    const quitBtn = chalk.hex(this.theme.warning)(`Quit (q)`);
-    const helpBtn = chalk.hex(this.theme.info)(`Help (h)`);
-
-    const currentPosition = chalk.hex(this.theme.info)(
-      `Lines ${this.currentLine + 1}-${Math.min(this.currentLine + this.getContentHeight(), this.content.length)} of ${this.content.length}`,
+    const paginationInfo = chalk.hex(theme.normal)(
+      `Showing lines ${startLine}-${endLine} of ${totalLines}`,
     );
 
-    return `${prevBtn}  ${currentPosition}  ${nextBtn}  ${quitBtn}  ${helpBtn}`;
+    const hasPrev = this.hasPreviousPage();
+    const hasNext = this.hasNextPage();
+
+    const prevSymbol = hasPrev ? safeSymbol('◀', '<') : ' ';
+    const nextSymbol = hasNext ? safeSymbol('▶', '>') : ' ';
+
+    const prevControl = hasPrev
+      ? chalk.hex(theme.highlight)(prevSymbol)
+      : chalk.hex(theme.muted)(prevSymbol);
+
+    const nextControl = hasNext
+      ? chalk.hex(theme.highlight)(nextSymbol)
+      : chalk.hex(theme.muted)(nextSymbol);
+
+    const helpPrompt = chalk.hex(theme.muted)(`Press ${chalk.bold('h')} for help`);
+
+    return `\n${paginationInfo} ${prevControl} ${nextControl} ${helpPrompt}`;
   }
 
   /**
-   * Render help information
+   * Render the help text
    */
   private renderHelp(): string {
-    const helpText = [
-      chalk.bold.hex(this.theme.primary)('Keyboard Controls:'),
-      `${chalk.hex(this.theme.info)('n, j, ↓, Space')} - Next page`,
-      `${chalk.hex(this.theme.info)('p, k, ↑, b')} - Previous page`,
-      `${chalk.hex(this.theme.info)('q, Esc')} - Quit viewer`,
-      `${chalk.hex(this.theme.info)('h')} - Toggle help`,
-    ];
+    const { theme } = this;
+    const helpLines = [];
 
-    // Add custom actions if any
-    if (this.options.additionalActions) {
-      for (const [key, description] of Object.entries(this.options.additionalActions)) {
-        helpText.push(`${chalk.hex(this.theme.info)(key)} - ${description}`);
-      }
+    helpLines.push(chalk.bold.hex(theme.primary)('\nKeyboard Controls:'));
+
+    // Navigation controls
+    helpLines.push(
+      `${chalk.bold.hex(theme.highlight)('n, j, ↓, space')} Next page   ${chalk.bold.hex(
+        theme.highlight,
+      )('p, k, ↑, b')} Previous page   ${chalk.bold.hex(theme.highlight)('q, Esc')} Quit`,
+    );
+
+    // Help toggle
+    helpLines.push(
+      `${chalk.bold.hex(theme.highlight)('h')} Toggle help   ${chalk.bold.hex(
+        theme.highlight,
+      )('/')} Search (coming soon)`,
+    );
+
+    // Custom actions
+    if (this.options.additionalActions && Object.keys(this.options.additionalActions).length > 0) {
+      helpLines.push(chalk.bold.hex(theme.primary)('\nAdditional Actions:'));
+
+      const actionsLine = Object.entries(this.options.additionalActions)
+        .map(
+          ([key, desc]) => `${chalk.bold.hex(theme.highlight)(key)} ${chalk.hex(theme.normal)(desc)}`,
+        )
+        .join('   ');
+
+      helpLines.push(actionsLine);
     }
 
-    return helpText.join('\n');
+    return helpLines.join('\n');
   }
 }
 
 /**
- * Display content in an interactive paged viewer
- * @param content The content to display
- * @param options Viewer options
- * @returns A promise that resolves when viewing is complete
+ * Helper function to show content in a viewer
+ * @param content - Content to view
+ * @param options - Viewer options
  */
 export async function showContent(
   content: string | string[],
   options: ContentViewerOptions = {},
 ): Promise<void> {
+  if (!content || (Array.isArray(content) && content.length === 0)) {
+    console.log('*No content to display*');
+    return;
+  }
+  
   const viewer = new ContentViewer(content, options);
-  return viewer.start();
+  await viewer.start();
 }
