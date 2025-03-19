@@ -40,4 +40,7 @@ export * from './pagination.js';
 export * from './confirm.js';
 
 // Export markdown renderer
-export * from './markdown.js'; 
+export * from './markdown.js';
+
+// Export diff renderer
+export * from './diff.js'; 
