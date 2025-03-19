@@ -6,8 +6,8 @@
 import chalk from 'chalk';
 import { ProgressProps, StatusType, Size } from './types.js';
 import { getStatusColor, statusSymbol } from './theme.js';
-import { getVisualLength, center } from './text.js';
-import { getTerminalSize, safeSymbol, percentageToBar } from './utils.js';
+import { getVisualLength } from './text.js';
+import { safeSymbol, percentageToBar } from './utils.js';
 
 // Spinner frames for animation
 const spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -140,7 +140,7 @@ export class ProgressIndicator {
  */
 export class Spinner extends ProgressIndicator {
   protected render(): void {
-    const { message = '', status = 'pending', size = 'medium' } = this.props;
+    const { message = '', status = 'pending' } = this.props;
     const spinnerFrame = chalk.hex(getStatusColor(status))(this.getSpinnerFrame());
     
     const output = `${spinnerFrame} ${message}`;

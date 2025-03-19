@@ -34,7 +34,7 @@ export async function confirm(options: ConfirmOptions): Promise<boolean> {
   let colorizedMessage = options.message;
   
   if (options.status) {
-    const colorKey = statusToColorKey(options.status, theme);
+    const colorKey = statusToColorKey(options.status);
     colorizedMessage = chalk.hex(theme[colorKey])(options.message);
   }
   
@@ -95,7 +95,7 @@ export async function confirmDangerousAction(action: string, details?: string): 
 /**
  * Maps status type to theme color key
  */
-function statusToColorKey(status: StatusType, theme: ColorTheme): keyof ColorTheme {
+function statusToColorKey(status: StatusType): keyof ColorTheme {
   switch (status) {
     case 'success':
       return 'success';

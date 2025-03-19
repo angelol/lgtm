@@ -12,7 +12,7 @@ import { config } from './config/index.js';
 import { registerAuthCommands } from './auth/commands/index.js';
 import { authService } from './auth/index.js';
 import { 
-  approvePullRequest, 
+  approvePullRequest as _approvePullRequest, 
   listPullRequests, 
   displayPullRequests,
   showPrActionMenu 

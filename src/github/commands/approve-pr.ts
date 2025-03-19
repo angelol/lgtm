@@ -11,6 +11,8 @@ import { GitHubApiClient } from '../services/github-api-client.js';
 import { confirm, confirmFailingCi } from '../../ui/confirm.js';
 import { NotFoundError, PermissionError } from '../../utils/errors.js';
 import { formatCiStatus } from '../../ui/utils.js';
+import { authService } from '../../auth/index.js';
+import { config } from '../../config/index.js';
 
 /**
  * Interface for PR approval options
@@ -50,7 +52,7 @@ export async function approvePullRequest(
   const repo = repoInfo.name;
   
   // Set up API client
-  const apiClient = new GitHubApiClient();
+  const apiClient = new GitHubApiClient(authService, config);
   const repositoryService = new RepositoryService(apiClient);
   
   try {

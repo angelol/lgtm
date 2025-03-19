@@ -221,7 +221,7 @@ export class ContentViewer {
   /**
    * Handle keyboard input
    */
-  private handleKeyPress(str: string, key: { name: string; ctrl: boolean; meta: boolean; shift: boolean }): void {
+  private handleKeyPress(_str: string, key: { name: string; ctrl: boolean; meta: boolean; shift: boolean }): void {
     if (!this.isActive || !key) {
       return;
     }

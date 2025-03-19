@@ -4,7 +4,6 @@
  */
 
 import inquirer from 'inquirer';
-import { getTheme } from './theme.js';
 import { ColorTheme } from './types.js';
 
 /**
@@ -43,7 +42,6 @@ export async function showActionMenu<T>(
   actions: MenuItem<T>[],
   options: ActionMenuOptions = {}
 ): Promise<T | null> {
-  const theme = options.theme || getTheme();
   const pageSize = options.pageSize || 8;
   
   // Ensure we have a cancel option

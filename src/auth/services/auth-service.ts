@@ -1,17 +1,15 @@
 /**
- * Authentication Service
+ * Auth Service
  * 
- * Handles GitHub authentication and credential management.
+ * Handles GitHub authentication and token management.
  */
 
-import { Octokit } from 'octokit';
-import keytar from 'keytar';
 import chalk from 'chalk';
 import open from 'open';
-import http from 'http';
-import { randomBytes } from 'crypto';
+import keytar from 'keytar';
 import { config } from '../../config/index.js';
-import { URL } from 'url';
+import { Octokit } from 'octokit';
+import { randomBytes } from 'crypto';
 
 // Service name for keytar
 const SERVICE_NAME = 'lgtm-cli';
@@ -245,7 +243,7 @@ export class AuthService {
     await this.initOctokit(token);
     
     try {
-      // Verify token by getting user information
+      // Get user information to validate the token
       const { data } = await this.octokit!.rest.users.getAuthenticated();
       
       // Save credentials
@@ -262,26 +260,25 @@ export class AuthService {
       };
     } catch (error) {
       this.octokit = null;
-      throw new Error(`Invalid token: ${(error as Error).message}`);
+      throw new Error('Invalid token');
     }
   }
 
   /**
-   * Create a device code flow for browser-based authentication
+   * Create a device code flow for browser authentication
    * 
-   * @returns Promise resolving to the authorization URL, device code, and state
+   * @returns Promise resolving to device flow information
    */
   private async createDeviceCodeFlow(): Promise<{ url: string; code: string; state: string }> {
-    // Generate a random state for security
-    const state = randomBytes(16).toString('hex');
-    
-    // GitHub OAuth device flow URL
     const clientId = 'Iv1.c76557a56c8b68ed'; // GitHub OAuth App client ID for LGTM
     
     const baseUrl = config.get<string>('github.webBaseUrl', 'https://github.com');
     const deviceCodeUrl = `${baseUrl}/login/device/code`;
     
-    // Make a request to get a device code
+    // Generate random state
+    const state = randomBytes(16).toString('hex');
+    
+    // Request device code
     const response = await fetch(deviceCodeUrl, {
       method: 'POST',
       headers: {
@@ -295,7 +292,7 @@ export class AuthService {
     });
     
     if (!response.ok) {
-      throw new Error(`Failed to get device code: ${response.statusText}`);
+      throw new Error('Failed to create device code flow');
     }
     
     const data = await response.json();
@@ -303,31 +300,37 @@ export class AuthService {
     return {
       url: data.verification_uri,
       code: data.user_code,
-      state: `${state}:${data.device_code}`,
+      state,
     };
   }
 
   /**
-   * Poll for a token using the device code
+   * Poll for the token after device code authentication
    * 
-   * @param state - State containing the device code
+   * @param state - State from device code flow
    * @returns Promise resolving to the token
-   * @throws Error if polling times out or fails
    */
   private async pollForToken(state: string): Promise<string> {
-    const [, deviceCode] = state.split(':');
     const clientId = 'Iv1.c76557a56c8b68ed'; // GitHub OAuth App client ID for LGTM
     
     const baseUrl = config.get<string>('github.webBaseUrl', 'https://github.com');
     const accessTokenUrl = `${baseUrl}/login/oauth/access_token`;
     
-    // Poll for up to 5 minutes
-    const MAX_ATTEMPTS = 30;
-    const POLL_INTERVAL = 10000; // 10 seconds
+    // Wait for user to authenticate in browser
+    console.log(chalk.yellow('Waiting for authentication...'));
     
-    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    // Loop until token is received
+    let token: string | null = null;
+    let retries = 0;
+    
+    while (!token && retries < 30) {
+      retries++;
+      
       try {
-        // Make a request to check if the user has authenticated
+        // Add a small delay between attempts
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Check if the user has authenticated
         const response = await fetch(accessTokenUrl, {
           method: 'POST',
           headers: {
@@ -336,37 +339,29 @@ export class AuthService {
           },
           body: JSON.stringify({
             client_id: clientId,
-            device_code: deviceCode,
+            device_code: state,
             grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
           }),
         });
         
-        const data = await response.json();
-        
-        if (data.access_token) {
-          return data.access_token;
-        }
-        
-        if (data.error === 'authorization_pending') {
-          // User hasn't authorized yet, keep polling
-          await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
-          continue;
-        }
-        
-        if (data.error) {
-          throw new Error(`Authentication error: ${data.error_description || data.error}`);
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.access_token) {
+            token = data.access_token;
+            break;
+          }
         }
       } catch (error) {
-        if (attempt === MAX_ATTEMPTS - 1) {
-          throw error; // Only throw on last attempt
-        }
-        
-        // Otherwise, continue polling
-        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+        // Ignore errors, just keep trying
       }
     }
     
-    throw new Error('Authentication timed out. Please try again.');
+    if (!token) {
+      throw new Error('Authentication timed out or was rejected');
+    }
+    
+    return token;
   }
 }
 

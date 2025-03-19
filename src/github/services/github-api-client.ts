@@ -112,13 +112,13 @@ export class GitHubApiClient {
       }
       
       // Check if we're rate limited
-      if (this.rateLimitInfo.isLimited) {
-        const resetDate = new Date(this.rateLimitInfo.resetTimestamp * 1000);
-        throw new RateLimitError(
-          'GitHub API rate limit exceeded', 
-          this.rateLimitInfo.resetTimestamp,
-          { rateLimitInfo: this.rateLimitInfo }
-        );
+      if (this.rateLimitInfo && this.rateLimitInfo.remaining === 0) {
+        const now = new Date();
+        const message = `GitHub API rate limit exceeded. Resets in ${Math.ceil(
+          (this.rateLimitInfo.resetTimestamp * 1000 - now.getTime()) / 1000 / 60
+        )} minutes`;
+        
+        throw new RateLimitError(message, this.rateLimitInfo.resetTimestamp);
       }
       
       // Set up retry options

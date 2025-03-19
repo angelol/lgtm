@@ -19,7 +19,11 @@ export * from './box.js';
 export * from './utils.js';
 
 // Export error formatting
-export * from './error.js';
+export {
+  formatError,
+  formatErrorWithLabel,
+  statusToErrorLevel,
+} from './error.js';
 
 // Export selection interface
 export * from './selection.js';
