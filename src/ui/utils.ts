@@ -4,6 +4,8 @@
  */
 
 import { TerminalDimensions } from './types.js';
+import chalk from 'chalk';
+import { getTheme } from './theme.js';
 
 /**
  * Gets the current terminal size
@@ -102,4 +104,26 @@ export const percentageToBar = (percentage: number, length = 10, filledChar = '�
   const emptyLength = length - filledLength;
   
   return filledChar.repeat(filledLength) + emptyChar.repeat(emptyLength);
+};
+
+/**
+ * Formats CI status for display with appropriate colors and symbols
+ */
+export const formatCiStatus = (
+  status: 'success' | 'failure' | 'pending' | 'unknown' | null
+): string => {
+  const theme = getTheme();
+  
+  switch (status) {
+    case 'success':
+      return chalk.hex(theme.success)(`${safeSymbol('✓', '√')} CI Passing`);
+    case 'failure':
+      return chalk.hex(theme.error)(`${safeSymbol('✗', 'X')} CI Failed`);
+    case 'pending':
+      return chalk.hex(theme.warning)(`${safeSymbol('⏳', '...')} CI Running`);
+    case 'unknown':
+    case null:
+    default:
+      return chalk.hex(theme.muted)(`${safeSymbol('?', '?')} CI Unknown`);
+  }
 }; 

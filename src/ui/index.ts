@@ -18,8 +18,23 @@ export * from './box.js';
 // Export UI utilities
 export * from './utils.js';
 
-// Export progress indicators (will be implemented later)
+// Export progress indicators
 export * from './progress.js';
 
-// Export error formatting (will be implemented later)
-export * from './error.js'; 
+// Export error formatting
+export * from './error.js';
+
+// Export selection interface
+export * from './selection.js';
+
+// Export menu interface
+export * from './menu.js';
+
+// Export spinner animation
+export * from './spinner.js';
+
+// Export pagination component
+export * from './pagination.js';
+
+// Export confirmation prompts
+export * from './confirm.js'; 
