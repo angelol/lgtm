@@ -54,6 +54,25 @@ LGTM will be implemented using **TypeScript** with Node.js as the runtime enviro
 
 7. **Error Prevention**: Catches common errors at compile-time rather than runtime, essential for a tool users will rely on daily.
 
+### Node.js Version Compatibility
+
+Since LGTM is a developer tool that will be used across various environments, supporting a wide range of Node.js versions is critical:
+
+1. **Version Support Range**: LGTM will support Node.js versions 16.x through 23.x, covering:
+   - Long-term support (LTS) versions (16.x, 18.x, 20.x)
+   - Latest stable versions (22.x, 23.x)
+   - Future compatibility with 24.x will be evaluated upon its release
+
+2. **Runtime Version Verification**: The application will verify the user's Node.js version at runtime and provide clear error messages if compatibility issues arise.
+
+3. **Transpilation Target**: TypeScript code will be transpiled to target ES2018 to ensure compatibility with older Node.js versions while leveraging modern language features.
+
+4. **Feature Detection**: The application will implement feature detection and fallbacks for APIs that differ across Node.js versions.
+
+5. **Cross-Version Testing**: Both CI pipelines and local development workflows will support testing across the full matrix of supported Node.js versions.
+
+6. **Version Compatibility Documentation**: Clear documentation will be provided regarding supported Node.js versions and any version-specific considerations.
+
 ### Key Libraries and Dependencies
 - **Octokit.js**: For GitHub API integration
 - **Commander.js**: For command line argument parsing
@@ -229,6 +248,16 @@ LGTM will be implemented using **TypeScript** with Node.js as the runtime enviro
 - Semantic versioning for releases
 - npm for package management and distribution
 - Package bundling to optimize installation size
+
+## CI/CD
+- MUST implement automated tests in CI pipeline
+- MUST use semantic versioning
+- MUST implement static code analysis
+- MUST scan for security vulnerabilities in dependencies
+- MUST automate deployment process
+- MUST test installation process on all target platforms (macOS, Linux, Windows)
+- MUST test across all supported Node.js versions (16.x, 18.x, 20.x, 22.x, 23.x)
+- MUST fail CI if tests fail on any supported Node.js version
 
 ## User Experience
 
