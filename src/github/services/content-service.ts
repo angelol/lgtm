@@ -15,6 +15,36 @@ import {
 } from '../models/content.js';
 
 /**
+ * GitHub PR response for description
+ */
+interface GitHubPRDescriptionResponse {
+  body: string | null;
+  body_html: string;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  updated_at: string;
+}
+
+/**
+ * GitHub PR file changes response
+ */
+interface GitHubFileChangeResponse {
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  contents_url: string;
+  raw_url: string;
+  blob_url: string;
+  sha: string;
+  patch?: string;
+  previous_filename?: string;
+}
+
+/**
  * Service for retrieving and parsing content from GitHub pull requests
  */
 export class ContentService {
@@ -33,7 +63,7 @@ export class ContentService {
     pullNumber: number,
   ): Promise<PullRequestDescription> {
     try {
-      const pr = await this.apiClient.request<any>(
+      const pr = await this.apiClient.request<GitHubPRDescriptionResponse>(
         `GET /repos/${owner}/${repo}/pulls/${pullNumber}`,
       );
 
@@ -49,24 +79,25 @@ export class ContentService {
         },
         updatedAt: pr.updated_at,
       };
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         throw new NotFoundError(`Pull request #${pullNumber} not found in ${owner}/${repo}`);
       }
-      if (error.status === 403) {
+      if (err.status === 403) {
         throw new PermissionError(
-          `You don't have access to pull request #${pullNumber} in ${owner}/${repo}`,
+          `You don't have permission to view pull request #${pullNumber} in ${owner}/${repo}`,
         );
       }
       throw wrapError(
         error,
-        `Failed to get description for PR #${pullNumber} from ${owner}/${repo}`,
+        `Failed to get pull request description #${pullNumber} in ${owner}/${repo}`,
       );
     }
   }
 
   /**
-   * Retrieves file changes from a pull request
+   * Gets the list of file changes for a pull request
    */
   public async getFileChanges(
     owner: string,
@@ -74,9 +105,9 @@ export class ContentService {
     pullNumber: number,
   ): Promise<FileChange[]> {
     try {
-      const fileChanges = await this.apiClient.request<any[]>(
+      const fileChanges = await this.apiClient.request<GitHubFileChangeResponse[]>(
         `GET /repos/${owner}/${repo}/pulls/${pullNumber}/files`,
-        { per_page: 100 }, // Limit to 100 files, could implement pagination for more
+        { per_page: 100 }, // Limit to 100 files
       );
 
       return fileChanges.map(file => ({
@@ -91,18 +122,19 @@ export class ContentService {
         patch: file.patch,
         previousFilename: file.previous_filename,
       }));
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         throw new NotFoundError(`Pull request #${pullNumber} not found in ${owner}/${repo}`);
       }
-      if (error.status === 403) {
+      if (err.status === 403) {
         throw new PermissionError(
-          `You don't have access to pull request #${pullNumber} in ${owner}/${repo}`,
+          `You don't have permission to view pull request #${pullNumber} in ${owner}/${repo}`,
         );
       }
       throw wrapError(
         error,
-        `Failed to get file changes for PR #${pullNumber} from ${owner}/${repo}`,
+        `Failed to get file changes for PR #${pullNumber} in ${owner}/${repo}`,
       );
     }
   }

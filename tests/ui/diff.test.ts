@@ -12,7 +12,13 @@ function isParsedDiff(obj: any): obj is ParsedDiff {
 
 // Mock the renderDiff function
 jest.mock('../../src/ui/diff.js', () => {
-  const actualModule = jest.requireActual('../../src/ui/diff.js') as any;
+  // Define a type for the module to avoid using 'any'
+  interface DiffModule {
+    DiffOptions: unknown;
+    renderDiff: unknown;
+  }
+
+  const actualModule = jest.requireActual('../../src/ui/diff.js');
 
   return {
     renderDiff: jest.fn().mockImplementation((diff: unknown) => {

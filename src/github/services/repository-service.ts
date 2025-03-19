@@ -8,6 +8,64 @@ import { GitHubApiClient } from './github-api-client.js';
 import { NotFoundError, PermissionError, wrapError } from '../../utils/errors.js';
 
 /**
+ * GitHub repository response interface
+ */
+interface GitHubRepositoryResponse {
+  owner: {
+    login: string;
+  };
+  name: string;
+  full_name: string;
+  html_url: string;
+  default_branch: string;
+  private: boolean;
+  description: string | null;
+}
+
+/**
+ * GitHub pull request API response
+ */
+interface GitHubPullRequestResponse {
+  number: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  state: 'open' | 'closed';
+  html_url: string;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  head: {
+    ref: string;
+    sha: string;
+  };
+  base: {
+    ref: string;
+  };
+  draft: boolean;
+  merged: boolean;
+  mergeable: boolean | null;
+  labels: Array<{
+    name: string;
+    color: string;
+  }>;
+}
+
+/**
+ * GitHub check runs API response
+ */
+interface GitHubCheckRunsResponse {
+  total_count: number;
+  check_runs: Array<{
+    id: number;
+    name: string;
+    status: string;
+    conclusion: string | null;
+  }>;
+}
+
+/**
  * Repository information
  */
 export interface Repository {
@@ -77,7 +135,9 @@ export class RepositoryService {
    */
   public async getRepository(owner: string, repo: string): Promise<Repository> {
     try {
-      const repoData = await this.apiClient.request<any>(`GET /repos/${owner}/${repo}`);
+      const repoData = await this.apiClient.request<GitHubRepositoryResponse>(
+        `GET /repos/${owner}/${repo}`,
+      );
 
       return {
         owner: repoData.owner.login,
@@ -88,11 +148,12 @@ export class RepositoryService {
         isPrivate: repoData.private,
         description: repoData.description,
       };
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         throw new NotFoundError(`Repository ${owner}/${repo} not found`);
       }
-      if (error.status === 403) {
+      if (err.status === 403) {
         throw new PermissionError(`You don't have access to repository ${owner}/${repo}`);
       }
       throw wrapError(error, `Failed to get repository ${owner}/${repo}`);
@@ -118,7 +179,7 @@ export class RepositoryService {
         per_page: 30,
       };
 
-      const pullRequests = await this.apiClient.request<any[]>(
+      const pullRequests = await this.apiClient.request<GitHubPullRequestResponse[]>(
         `GET /repos/${owner}/${repo}/pulls`,
         params,
       );
@@ -141,7 +202,7 @@ export class RepositoryService {
             } else {
               // If no statuses found, try check runs API (used by GitHub Actions)
               try {
-                const checkRuns = await this.apiClient.request<any>(
+                const checkRuns = await this.apiClient.request<GitHubCheckRunsResponse>(
                   `GET /repos/${owner}/${repo}/commits/${pr.head.sha}/check-runs`,
                 );
 
@@ -152,12 +213,12 @@ export class RepositoryService {
                 } else {
                   ciStatus = 'unknown';
                 }
-              } catch (checkError) {
+              } catch (_checkError) {
                 // Fallback to unknown if check runs API fails
                 ciStatus = 'unknown';
               }
             }
-          } catch (error) {
+          } catch (_error) {
             // Ignore errors fetching CI status
             ciStatus = 'unknown';
           }
@@ -177,21 +238,22 @@ export class RepositoryService {
             baseRef: pr.base.ref,
             isDraft: pr.draft || false,
             mergeable: pr.mergeable,
-            labels: pr.labels.map((label: any) => ({
+            labels: pr.labels.map(label => ({
               name: label.name,
               color: label.color,
             })),
             ciStatus,
-          };
+          } as PullRequest;
         }),
       );
 
       return prsWithStatus;
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         throw new NotFoundError(`Repository ${owner}/${repo} not found`);
       }
-      if (error.status === 403) {
+      if (err.status === 403) {
         throw new PermissionError(`You don't have access to repository ${owner}/${repo}`);
       }
       throw wrapError(error, `Failed to list pull requests for ${owner}/${repo}`);
@@ -207,7 +269,7 @@ export class RepositoryService {
     pullNumber: number,
   ): Promise<PullRequest> {
     try {
-      const pr = await this.apiClient.request<any>(
+      const pr = await this.apiClient.request<GitHubPullRequestResponse>(
         `GET /repos/${owner}/${repo}/pulls/${pullNumber}`,
       );
 
@@ -225,7 +287,7 @@ export class RepositoryService {
         } else {
           // If no statuses found, try check runs API (used by GitHub Actions)
           try {
-            const checkRuns = await this.apiClient.request<any>(
+            const checkRuns = await this.apiClient.request<GitHubCheckRunsResponse>(
               `GET /repos/${owner}/${repo}/commits/${pr.head.sha}/check-runs`,
             );
 
@@ -236,12 +298,12 @@ export class RepositoryService {
             } else {
               ciStatus = 'unknown';
             }
-          } catch (checkError) {
+          } catch (_checkError) {
             // Fallback to unknown if check runs API fails
             ciStatus = 'unknown';
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore errors fetching CI status
         ciStatus = 'unknown';
       }
@@ -261,22 +323,23 @@ export class RepositoryService {
         baseRef: pr.base.ref,
         isDraft: pr.draft || false,
         mergeable: pr.mergeable,
-        labels: pr.labels.map((label: any) => ({
+        labels: pr.labels.map(label => ({
           name: label.name,
           color: label.color,
         })),
         ciStatus,
       };
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         throw new NotFoundError(`Pull request #${pullNumber} not found in ${owner}/${repo}`);
       }
-      if (error.status === 403) {
+      if (err.status === 403) {
         throw new PermissionError(
-          `You don't have access to pull request #${pullNumber} in ${owner}/${repo}`,
+          `You don't have permission to view pull request #${pullNumber} in ${owner}/${repo}`,
         );
       }
-      throw wrapError(error, `Failed to get pull request #${pullNumber} from ${owner}/${repo}`);
+      throw wrapError(error, `Failed to get pull request #${pullNumber} in ${owner}/${repo}`);
     }
   }
 
@@ -296,11 +359,12 @@ export class RepositoryService {
       });
 
       return true;
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { status?: number };
+      if (err.status === 404) {
         throw new NotFoundError(`Pull request #${pullNumber} not found in ${owner}/${repo}`);
       }
-      if (error.status === 403) {
+      if (err.status === 403) {
         throw new PermissionError(
           `You don't have permission to approve pull request #${pullNumber} in ${owner}/${repo}`,
         );
@@ -330,7 +394,7 @@ export class RepositoryService {
 
       // If no statuses found, try check runs API (used by GitHub Actions)
       try {
-        const checkRuns = await this.apiClient.request<any>(
+        const checkRuns = await this.apiClient.request<GitHubCheckRunsResponse>(
           `GET /repos/${owner}/${repo}/commits/${sha}/check-runs`,
         );
 
@@ -338,13 +402,13 @@ export class RepositoryService {
           // Determine overall status from check runs
           return this._determineCheckRunsStatus(checkRuns.check_runs);
         }
-      } catch (checkError) {
+      } catch (_checkError) {
         // Ignore errors from check runs API
       }
 
       // No CI checks found
       return 'unknown';
-    } catch (error) {
+    } catch (_error) {
       // In case of any error, return unknown
       return 'unknown';
     }
@@ -376,7 +440,12 @@ export class RepositoryService {
    * Determines the overall status from a list of check runs
    */
   private _determineCheckRunsStatus(
-    checkRuns: Array<any>,
+    checkRuns: Array<{
+      id: number;
+      name: string;
+      status: string;
+      conclusion: string | null;
+    }>,
   ): 'success' | 'failure' | 'pending' | 'unknown' {
     if (!checkRuns || checkRuns.length === 0) {
       return 'unknown';

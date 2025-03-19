@@ -121,6 +121,7 @@ export class GitHubApiClient {
       let retries = 0;
 
       // Execute request with retry logic
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         try {
           const response = await this.octokit.request(route, params);
@@ -129,26 +130,34 @@ export class GitHubApiClient {
           this._updateRateLimitInfo(response.headers);
 
           return response.data as T;
-        } catch (requestError: any) {
+        } catch (requestError) {
+          // Define a proper error type for the error
+          const error = requestError as {
+            status?: number;
+            message?: string;
+            headers?: Record<string, string | string[] | number | undefined>;
+          };
+
           // Update rate limit info from error headers
-          if (requestError.headers) {
-            this._updateRateLimitInfo(requestError.headers);
+          if (error.headers) {
+            this._updateRateLimitInfo(error.headers);
           }
 
           // Handle rate limiting
-          if (requestError.status === 403 && /rate limit/i.test(requestError.message)) {
+          if (error.status === 403 && error.message && /rate limit/i.test(error.message)) {
             throw new RateLimitError(
               'GitHub API rate limit exceeded',
               this.rateLimitInfo.resetTimestamp,
-              { originalError: requestError },
+              { originalError: error },
             );
           }
 
           // Retry on server errors (if retry option is enabled)
           if (
             options.retry !== false &&
-            requestError.status >= 500 &&
-            requestError.status < 600 &&
+            error.status !== undefined &&
+            error.status >= 500 &&
+            error.status < 600 &&
             retries < maxRetries
           ) {
             retries++;
@@ -163,8 +172,8 @@ export class GitHubApiClient {
           throw wrapError(requestError);
         }
       }
-    } catch (error) {
-      throw wrapError(error, `GitHub API request failed: ${route}`);
+    } catch (_error) {
+      throw wrapError(_error, `GitHub API request failed: ${route}`);
     }
   }
 
@@ -217,7 +226,7 @@ export class GitHubApiClient {
         resetTimestamp: resources.core.reset,
         isLimited: resources.core.remaining <= 0,
       };
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors fetching rate limit info
     }
   }
@@ -225,17 +234,19 @@ export class GitHubApiClient {
   /**
    * Updates rate limit information from response headers
    */
-  private _updateRateLimitInfo(headers: Record<string, any>): void {
+  private _updateRateLimitInfo(
+    headers: Record<string, string | string[] | number | undefined>,
+  ): void {
     const limit = headers['x-ratelimit-limit'];
     const remaining = headers['x-ratelimit-remaining'];
     const reset = headers['x-ratelimit-reset'];
 
     if (limit && remaining && reset) {
       this.rateLimitInfo = {
-        limit: parseInt(limit, 10),
-        remaining: parseInt(remaining, 10),
-        resetTimestamp: parseInt(reset, 10),
-        isLimited: parseInt(remaining, 10) <= 0,
+        limit: parseInt(String(limit), 10),
+        remaining: parseInt(String(remaining), 10),
+        resetTimestamp: parseInt(String(reset), 10),
+        isLimited: parseInt(String(remaining), 10) <= 0,
       };
     }
   }
