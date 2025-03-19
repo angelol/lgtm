@@ -18,9 +18,6 @@ export * from './box.js';
 // Export UI utilities
 export * from './utils.js';
 
-// Export progress indicators
-export * from './progress.js';
-
 // Export error formatting
 export * from './error.js';
 
@@ -43,4 +40,13 @@ export * from './confirm.js';
 export * from './markdown.js';
 
 // Export diff renderer
-export * from './diff.js'; 
+export * from './diff.js';
+
+// Export content viewer
+export * from './content-viewer.js';
+
+// Export table display component
+export * from './table.js';
+
+// Export PR list display component
+export * from './pr-list.js'; 
