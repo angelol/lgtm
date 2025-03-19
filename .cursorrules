@@ -47,8 +47,14 @@
 
 ## Code Quality
 - MUST use ESLint with typescript-eslint plugin
+  - Run linter: `npm run lint`
+  - Fix formatting issues: `npm run format`
+  - Fix linting issues: `npm run lint:fix`
+  - Lint specific files: `npx eslint path/to/file.ts`
+  - Configure in `.eslintrc.json`
 - MUST enforce consistent code formatting with Prettier
 - MUST follow SOLID principles
+- MUST follow DRY (Don't Repeat Yourself) principles
 - MUST implement logging for all significant operations
 - MUST avoid complex functions (max 20 lines per function)
 - MUST avoid deeply nested code (max 3 levels)

@@ -90,10 +90,17 @@ export class ContentViewer {
    */
   constructor(content: string | string[], options: ContentViewerOptions = {}) {
     // Ensure content is always an array and never undefined
-    this.content = typeof content === 'string' 
-      ? (content ? content.split('\n') : ['']) 
-      : (Array.isArray(content) ? (content.length > 0 ? content : ['']) : ['']);
-    
+    this.content =
+      typeof content === 'string'
+        ? content
+          ? content.split('\n')
+          : ['']
+        : Array.isArray(content)
+          ? content.length > 0
+            ? content
+            : ['']
+          : [''];
+
     this.options = options;
     this.theme = options.theme || getTheme();
     this.keyBindings = { ...DEFAULT_KEY_BINDINGS, ...options.keyBindings };
@@ -356,7 +363,7 @@ export class ContentViewer {
     // Display content lines
     for (let i = this.currentLine; i < endLine; i++) {
       const line = this.content[i] || ''; // Ensure we have a string even if undefined
-      
+
       // Show line numbers if requested
       if (this.options.showLineNumbers) {
         const lineNumber = String(i + 1).padStart(3, ' ');
@@ -425,9 +432,9 @@ export class ContentViewer {
 
     // Help toggle
     helpLines.push(
-      `${chalk.bold.hex(theme.highlight)('h')} Toggle help   ${chalk.bold.hex(
-        theme.highlight,
-      )('/')} Search (coming soon)`,
+      `${chalk.bold.hex(theme.highlight)('h')} Toggle help   ${chalk.bold.hex(theme.highlight)(
+        '/',
+      )} Search (coming soon)`,
     );
 
     // Custom actions
@@ -436,7 +443,8 @@ export class ContentViewer {
 
       const actionsLine = Object.entries(this.options.additionalActions)
         .map(
-          ([key, desc]) => `${chalk.bold.hex(theme.highlight)(key)} ${chalk.hex(theme.normal)(desc)}`,
+          ([key, desc]) =>
+            `${chalk.bold.hex(theme.highlight)(key)} ${chalk.hex(theme.normal)(desc)}`,
         )
         .join('   ');
 
@@ -460,7 +468,7 @@ export async function showContent(
     console.log('*No content to display*');
     return;
   }
-  
+
   const viewer = new ContentViewer(content, options);
   await viewer.start();
 }
