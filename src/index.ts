@@ -15,7 +15,8 @@ import {
   approvePullRequest as _approvePullRequest, 
   listPullRequests, 
   displayPullRequests,
-  showPrActionMenu 
+  showPrActionMenu,
+  reviewPullRequest
 } from './github/index.js';
 
 /**
@@ -98,7 +99,16 @@ async function main(): Promise<void> {
           
           // Based on options, decide what to do with this PR
           if (options.review) {
-            console.log(chalk.yellow(`Review mode for PR #${pr} coming soon`));
+            const success = await reviewPullRequest(pr, {
+              force: options.force || false,
+              comment: options.comment,
+              autoApprove: true
+            });
+            
+            // Exit with appropriate code based on success
+            if (!success) {
+              process.exit(1);
+            }
             return;
           }
           

@@ -9,6 +9,7 @@ import { getGitHubRepository } from '../../utils/repository.js';
 import { RepositoryService } from '../services/repository-service.js';
 import { GitHubApiClient } from '../services/github-api-client.js';
 import { approvePullRequest } from './approve-pr.js';
+import { reviewPullRequest } from './review-pr.js';
 import { formatCiStatus } from '../../ui/utils.js';
 import { PullRequest } from '../services/repository-service.js';
 import chalk from 'chalk';
@@ -107,8 +108,10 @@ export async function showPrActionMenu(
       return true;
       
     case 'review-changes':
-      console.log(chalk.yellow('Review changes feature coming soon'));
-      return true;
+      return await reviewPullRequest(prNumber, {
+        ...options,
+        autoApprove: true
+      });
       
     case 'open-browser':
       console.log(chalk.yellow('Open in browser feature coming soon'));

@@ -24,6 +24,7 @@ export {
 export { approvePullRequest, ApprovePrOptions } from './commands/approve-pr.js';
 export { listPullRequests, displayPullRequests, ListPrOptions } from './commands/list-prs.js';
 export { showPrActionMenu, PrActionOptions, PrAction } from './commands/pr-menu.js';
+export { reviewPullRequest, ReviewPrOptions } from './commands/review-pr.js';
 
 // Import dependencies
 import { GitHubApiClient } from './services/github-api-client.js';
