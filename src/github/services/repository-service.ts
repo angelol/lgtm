@@ -126,12 +126,34 @@ export class RepositoryService {
           let ciStatus: 'success' | 'failure' | 'pending' | 'unknown' | null = null;
           
           try {
+            // First try the commit status API
             const statuses = await this.apiClient.request<GitHubStatusResponse>(
               `GET /repos/${owner}/${repo}/commits/${pr.head.sha}/status`
             );
             
-            // Map the combined status to our simplified status
-            ciStatus = this._mapCiStatus(statuses.state);
+            // Check if any CI checks exist
+            if (statuses.total_count > 0 || (statuses.statuses && statuses.statuses.length > 0)) {
+              // Map the combined status to our simplified status
+              ciStatus = this._mapCiStatus(statuses.state);
+            } else {
+              // If no statuses found, try check runs API (used by GitHub Actions)
+              try {
+                const checkRuns = await this.apiClient.request<any>(
+                  `GET /repos/${owner}/${repo}/commits/${pr.head.sha}/check-runs`
+                );
+                
+                if (checkRuns.total_count > 0) {
+                  // Determine overall status from check runs
+                  const checkRunsStatus = this._determineCheckRunsStatus(checkRuns.check_runs);
+                  ciStatus = checkRunsStatus;
+                } else {
+                  ciStatus = 'unknown';
+                }
+              } catch (checkError) {
+                // Fallback to unknown if check runs API fails
+                ciStatus = 'unknown';
+              }
+            }
           } catch (error) {
             // Ignore errors fetching CI status
             ciStatus = 'unknown';
@@ -185,11 +207,33 @@ export class RepositoryService {
       // Get CI status
       let ciStatus: 'success' | 'failure' | 'pending' | 'unknown' | null = null;
       try {
+        // First try the commit status API
         const statuses = await this.apiClient.request<GitHubStatusResponse>(
           `GET /repos/${owner}/${repo}/commits/${pr.head.sha}/status`
         );
         
-        ciStatus = this._mapCiStatus(statuses.state);
+        // Check if any CI checks exist
+        if (statuses.total_count > 0 || (statuses.statuses && statuses.statuses.length > 0)) {
+          ciStatus = this._mapCiStatus(statuses.state);
+        } else {
+          // If no statuses found, try check runs API (used by GitHub Actions)
+          try {
+            const checkRuns = await this.apiClient.request<any>(
+              `GET /repos/${owner}/${repo}/commits/${pr.head.sha}/check-runs`
+            );
+            
+            if (checkRuns.total_count > 0) {
+              // Determine overall status from check runs
+              const checkRunsStatus = this._determineCheckRunsStatus(checkRuns.check_runs);
+              ciStatus = checkRunsStatus;
+            } else {
+              ciStatus = 'unknown';
+            }
+          } catch (checkError) {
+            // Fallback to unknown if check runs API fails
+            ciStatus = 'unknown';
+          }
+        }
       } catch (error) {
         // Ignore errors fetching CI status
         ciStatus = 'unknown';
@@ -262,11 +306,32 @@ export class RepositoryService {
    */
   public async getCiStatus(owner: string, repo: string, sha: string): Promise<'success' | 'failure' | 'pending' | 'unknown'> {
     try {
+      // First try the commit status API
       const statuses = await this.apiClient.request<GitHubStatusResponse>(
         `GET /repos/${owner}/${repo}/commits/${sha}/status`
       );
       
-      return this._mapCiStatus(statuses.state);
+      // Check if any CI checks exist
+      if (statuses.total_count > 0 || (statuses.statuses && statuses.statuses.length > 0)) {
+        return this._mapCiStatus(statuses.state);
+      }
+      
+      // If no statuses found, try check runs API (used by GitHub Actions)
+      try {
+        const checkRuns = await this.apiClient.request<any>(
+          `GET /repos/${owner}/${repo}/commits/${sha}/check-runs`
+        );
+        
+        if (checkRuns.total_count > 0) {
+          // Determine overall status from check runs
+          return this._determineCheckRunsStatus(checkRuns.check_runs);
+        }
+      } catch (checkError) {
+        // Ignore errors from check runs API
+      }
+      
+      // No CI checks found
+      return 'unknown';
     } catch (error) {
       // In case of any error, return unknown
       return 'unknown';
@@ -277,6 +342,11 @@ export class RepositoryService {
    * Maps GitHub's status states to our simplified status
    */
   private _mapCiStatus(state: string): 'success' | 'failure' | 'pending' | 'unknown' {
+    // If state is empty string or null, it means no CI is configured
+    if (!state || state === '') {
+      return 'unknown';
+    }
+    
     switch (state) {
       case 'success':
         return 'success';
@@ -287,6 +357,54 @@ export class RepositoryService {
         return 'pending';
       default:
         return 'unknown';
+    }
+  }
+
+  /**
+   * Determines the overall status from a list of check runs
+   */
+  private _determineCheckRunsStatus(checkRuns: Array<any>): 'success' | 'failure' | 'pending' | 'unknown' {
+    if (!checkRuns || checkRuns.length === 0) {
+      return 'unknown';
+    }
+    
+    let hasFailure = false;
+    let hasPending = false;
+    let hasSuccess = false;
+    
+    for (const run of checkRuns) {
+      // Check run statuses: queued, in_progress, completed
+      // Check run conclusions (when completed): success, failure, neutral, cancelled, skipped, timed_out, action_required
+      
+      if (run.status !== 'completed') {
+        // If any run is not completed, consider it pending
+        hasPending = true;
+      } else {
+        switch (run.conclusion) {
+          case 'success':
+          case 'neutral':
+          case 'skipped':
+            hasSuccess = true;
+            break;
+          case 'failure':
+          case 'cancelled':
+          case 'timed_out':
+          case 'action_required':
+            hasFailure = true;
+            break;
+        }
+      }
+    }
+    
+    // Determine overall status - prioritize failures
+    if (hasFailure) {
+      return 'failure';
+    } else if (hasPending) {
+      return 'pending';
+    } else if (hasSuccess) {
+      return 'success';
+    } else {
+      return 'unknown';
     }
   }
 } 

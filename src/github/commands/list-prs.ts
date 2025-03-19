@@ -13,6 +13,7 @@ import { selectPullRequest } from '../../ui/selection.js';
 import { PullRequest } from '../services/repository-service.js';
 import { authService } from '../../auth/index.js';
 import { config } from '../../config/index.js';
+import { formatCiStatus } from '../../ui/utils.js';
 
 /**
  * Interface for PR listing options
@@ -101,24 +102,8 @@ export function displayPullRequests(pullRequests: PullRequest[]): void {
   
   for (const pr of pullRequests) {
     const timeAgo = new Date(pr.createdAt).toLocaleDateString();
-    const ciStatus = getCiStatusIndicator(pr.ciStatus);
+    const ciStatus = formatCiStatus(pr.ciStatus);
     
     console.log(`#${pr.number} | ${pr.title} | @${pr.author.login} | ${timeAgo} | ${ciStatus}`);
-  }
-}
-
-/**
- * Get a colored indicator for CI status
- */
-function getCiStatusIndicator(status: string | null): string {
-  switch (status) {
-    case 'success':
-      return chalk.green('✅ CI Passing');
-    case 'failure':
-      return chalk.red('❌ CI Failed');
-    case 'pending':
-      return chalk.yellow('⏳ CI Running');
-    default:
-      return chalk.gray('? CI Unknown');
   }
 } 
