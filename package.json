@@ -1,0 +1,79 @@
+{
+  "name": "lgtm-cli",
+  "version": "0.1.0",
+  "description": "A command-line tool to approve GitHub PRs with a next-level UX",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "lgtm": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=16.0.0 <=23.x"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node --esm src/index.ts",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angelol/lgtm.git"
+  },
+  "keywords": [
+    "github",
+    "pull-request",
+    "cli",
+    "review",
+    "approve"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/angelol/lgtm/issues"
+  },
+  "homepage": "https://github.com/angelol/lgtm#readme",
+  "devDependencies": {
+    "@types/boxen": "^2.1.0",
+    "@types/chalk": "^0.4.31",
+    "@types/configstore": "^6.0.2",
+    "@types/inquirer": "^9.0.7",
+    "@types/jest": "^29.5.14",
+    "@types/keytar": "^4.4.0",
+    "@types/marked-terminal": "^6.1.1",
+    "@types/node": "^22.13.10",
+    "@types/open": "^6.1.0",
+    "@types/semver": "^7.5.8",
+    "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "@typescript-eslint/parser": "^8.26.1",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "configstore": "^7.0.0",
+    "diff2html": "^3.4.51",
+    "inquirer": "^12.5.0",
+    "keytar": "^7.9.0",
+    "marked-terminal": "^7.3.0",
+    "octokit": "^4.1.2",
+    "open": "^10.1.0",
+    "semver": "^7.7.1"
+  }
+}

@@ -1,0 +1,108 @@
+# Node.js with TypeScript Development Instructions
+
+## Project Setup
+- MUST use strict TypeScript configuration with `"strict": true` in tsconfig.json
+- MUST define explicit return types for all functions 
+- MUST use ESM modules with `"module": "NodeNext"` and `"moduleResolution": "NodeNext"`
+- MUST use a consistent version of Node.js specified in package.json engines field
+
+## Code Structure
+- MUST follow domain-driven design with clear separation of concerns
+- MUST organize code into modules (controllers, services, repositories, models)
+- MUST use dependency injection for better testability
+- MUST avoid circular dependencies between modules
+
+## Type Safety
+- MUST avoid using `any` type
+- MUST use interfaces or type aliases for complex objects
+- MUST leverage union types and generics where appropriate
+- MUST use proper nullability checks with optional chaining and nullish coalescing
+- MUST enable `noImplicitAny` and `strictNullChecks` in compiler options
+
+## Error Handling
+- MUST use custom error classes that extend Error
+- MUST implement global error handlers for uncaught exceptions
+- MUST validate all external inputs with proper error responses
+- MUST use async/await with try/catch blocks for asynchronous error handling
+
+## Testing
+- MUST achieve minimum 80% code coverage for unit tests
+- MUST implement integration tests for all API endpoints
+- MUST use mock objects for external dependencies during testing
+- MUST use TDD approach: tests first, then implementation
+- MUST test error cases explicitly
+- MUST implement tests for interactive CLI components with simulated user input
+- MUST test command output formatting and display
+
+## Security
+- MUST sanitize all user inputs
+- MUST implement proper authentication and authorization
+- MUST use HTTPS for all external communications
+- MUST follow OWASP top 10 security guidelines
+- MUST avoid storing sensitive data in code or environment variables
+- MUST use proper rate limiting for API endpoints
+- MUST implement proper data validation
+- MUST use secure credential storage (Keytar) for GitHub tokens
+- MUST never log or expose authentication credentials
+
+## Code Quality
+- MUST use ESLint with typescript-eslint plugin
+- MUST enforce consistent code formatting with Prettier
+- MUST follow SOLID principles
+- MUST implement logging for all significant operations
+- MUST avoid complex functions (max 20 lines per function)
+- MUST avoid deeply nested code (max 3 levels)
+- MUST use meaningful variable and function names
+
+## Performance
+- MUST implement proper caching strategies
+- MUST use asynchronous operations for I/O bound operations
+- MUST implement pagination for large data sets
+- MUST optimize database queries and use proper indexes
+- MUST implement proper connection pooling
+- MUST implement efficient handling of GitHub API rate limits
+- MUST optimize terminal rendering for smooth interactions
+
+## Documentation
+- MUST document all public APIs using JSDoc or similar
+- MUST include README with setup and usage instructions
+- MUST document database schema and entity relationships
+- MUST maintain API documentation
+- MUST use descriptive commit messages
+- MUST include CLI command documentation with examples
+- MUST document all available command options and flags
+
+## CI/CD
+- MUST implement automated tests in CI pipeline
+- MUST use semantic versioning
+- MUST implement static code analysis
+- MUST scan for security vulnerabilities in dependencies
+- MUST automate deployment process
+- MUST test installation process on all target platforms (macOS, Linux, Windows)
+
+## When implementing a plan
+- MUST update implementation plan after each successful step
+- MUST check off completed tasks by replacing `[ ]` with `[x]` in the plan
+- MUST maintain a "Current Status" section to track overall progress
+- MUST add notes about design decisions and challenges encountered
+- MUST resume from the most recently unchecked task when interrupted
+- MUST not mark features as complete until tests are written and passing
+
+## CLI-Specific Requirements
+- MUST implement consistent user interface using terminal UI libraries (Inquirer.js, Chalk, Boxen)
+- MUST provide clear, colorized output for better readability
+- MUST implement helpful error messages with suggestions for resolution
+- MUST use progressive disclosure to balance simplicity with power
+- MUST support keyboard navigation in interactive modes
+- MUST implement responsive layouts that adapt to terminal size
+- MUST provide subtle animations and loading indicators without compromising performance
+- MUST ensure accessibility for screen reader users
+
+## GitHub API Integration
+- MUST use Octokit.js for GitHub API interactions
+- MUST implement proper error handling for API responses
+- MUST handle authentication flows securely following GitHub standards
+- MUST implement proper retry logic for transient API failures
+- MUST optimize API requests to minimize rate limit usage
+- MUST gracefully handle GitHub API rate limiting
+- MUST validate and sanitize all data received from GitHub API
