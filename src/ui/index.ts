@@ -49,4 +49,7 @@ export * from './content-viewer.js';
 export * from './table.js';
 
 // Export PR list display component
-export * from './pr-list.js'; 
+export * from './pr-list.js';
+
+// Export file diff viewer component for file-by-file navigation
+export * from './file-diff-viewer.js'; 

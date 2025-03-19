@@ -11,6 +11,12 @@ import chalk from 'chalk';
 import { config } from './config/index.js';
 import { registerAuthCommands } from './auth/commands/index.js';
 import { authService } from './auth/index.js';
+import { 
+  approvePullRequest, 
+  listPullRequests, 
+  displayPullRequests,
+  showPrActionMenu 
+} from './github/index.js';
 
 /**
  * Main entry point function
@@ -35,6 +41,8 @@ async function main(): Promise<void> {
     .option('-r, --review', 'Review pull request changes before approval')
     .option('-d, --description', 'View pull request description')
     .option('-o, --open', 'Open pull request in browser')
+    .option('-f, --force', 'Force approval even with failing CI')
+    .option('-c, --comment <comment>', 'Provide a custom approval comment')
     .action(async (pr, options) => {
       // For now, just display the command
       console.log(chalk.green('Welcome to LGTM CLI!'));
@@ -65,26 +73,81 @@ async function main(): Promise<void> {
         return;
       }
       
-      if (pr) {
-        console.log(`You requested to interact with PR #${pr}`);
-      } else {
-        console.log('No PR specified, would show interactive selection');
-      }
-      
+      // Non-Interactive List Mode
       if (options.list) {
-        console.log('Listing all open PRs (not implemented yet)');
+        try {
+          const pullRequests = await listPullRequests({ interactive: false });
+          if (Array.isArray(pullRequests) && pullRequests.length > 0) {
+            displayPullRequests(pullRequests);
+          }
+          return;
+        } catch (error) {
+          console.error(chalk.red(`Error: ${(error as Error).message}`));
+          process.exit(1);
+        }
       }
       
-      if (options.review) {
-        console.log(`Reviewing PR ${pr ? `#${pr}` : ''} (not implemented yet)`);
-      }
-      
-      if (options.description) {
-        console.log(`Viewing description for PR ${pr ? `#${pr}` : ''} (not implemented yet)`);
-      }
-      
-      if (options.open) {
-        console.log(`Opening PR ${pr ? `#${pr}` : ''} in browser (not implemented yet)`);
+      // Handle PR approval if a PR number was provided
+      if (pr) {
+        try {
+          // Extract options for PR actions
+          const actionOptions = {
+            force: options.force || false,
+            comment: options.comment
+          };
+          
+          // Based on options, decide what to do with this PR
+          if (options.review) {
+            console.log(chalk.yellow(`Review mode for PR #${pr} coming soon`));
+            return;
+          }
+          
+          if (options.description) {
+            console.log(chalk.yellow(`Description view for PR #${pr} coming soon`));
+            return;
+          }
+          
+          if (options.open) {
+            console.log(chalk.yellow(`Opening PR #${pr} in browser coming soon`));
+            return;
+          }
+          
+          // Default: Show PR action menu
+          const success = await showPrActionMenu(Number(pr), actionOptions);
+          
+          // Exit with appropriate code based on success
+          if (!success) {
+            process.exit(1);
+          }
+          
+          return;
+        } catch (error) {
+          console.error(chalk.red(`Error: ${(error as Error).message}`));
+          process.exit(1);
+        }
+      } else {
+        // Interactive PR selection mode (default with no arguments)
+        try {
+          const selectedPr = await listPullRequests({ interactive: true });
+          
+          if (typeof selectedPr === 'number') {
+            // Show PR action menu for the selected PR
+            const actionOptions = {
+              force: options.force || false,
+              comment: options.comment
+            };
+            
+            const success = await showPrActionMenu(selectedPr, actionOptions);
+            
+            // Exit with appropriate code based on success
+            if (!success) {
+              process.exit(1);
+            }
+          }
+        } catch (error) {
+          console.error(chalk.red(`Error: ${(error as Error).message}`));
+          process.exit(1);
+        }
       }
     });
   

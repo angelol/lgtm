@@ -20,6 +20,11 @@ export {
   ParsedDiff
 } from './models/content.js';
 
+// Export commands
+export { approvePullRequest, ApprovePrOptions } from './commands/approve-pr.js';
+export { listPullRequests, displayPullRequests, ListPrOptions } from './commands/list-prs.js';
+export { showPrActionMenu, PrActionOptions, PrAction } from './commands/pr-menu.js';
+
 // Import dependencies
 import { GitHubApiClient } from './services/github-api-client.js';
 import { RepositoryService } from './services/repository-service.js';
