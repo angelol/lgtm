@@ -9,6 +9,8 @@ import { Command } from 'commander';
 import { verifyNodeVersion } from './utils/version.js';
 import chalk from 'chalk';
 import { config } from './config/index.js';
+import { registerAuthCommands } from './auth/commands/index.js';
+import { authService } from './auth/index.js';
 
 /**
  * Main entry point function
@@ -36,6 +38,32 @@ async function main(): Promise<void> {
     .action(async (pr, options) => {
       // For now, just display the command
       console.log(chalk.green('Welcome to LGTM CLI!'));
+      
+      // Check if authenticated
+      const isAuthenticated = await authService.isAuthenticated();
+      
+      if (!isAuthenticated) {
+        console.log(`${chalk.yellow('✨')} Welcome to LGTM! To get started, you need to authenticate with GitHub.\n`);
+        
+        // Trigger the login flow
+        try {
+          const loginCommand = program.commands.find(cmd => cmd.name() === 'auth')
+            ?.commands.find(cmd => cmd.name() === 'login');
+          
+          if (loginCommand) {
+            await loginCommand.parseAsync([], { from: 'user' });
+          } else {
+            console.error(`${chalk.red('Error:')} Could not find login command.`);
+            process.exit(1);
+          }
+        } catch (error) {
+          console.error(`${chalk.red('Error:')} ${(error as Error).message}`);
+          process.exit(1);
+        }
+        
+        console.log('\nNow you can use LGTM to approve pull requests!');
+        return;
+      }
       
       if (pr) {
         console.log(`You requested to interact with PR #${pr}`);
@@ -65,26 +93,8 @@ async function main(): Promise<void> {
     .command('auth')
     .description('Manage GitHub authentication');
   
-  authCommand
-    .command('login')
-    .description('Log in to GitHub')
-    .action(() => {
-      console.log('Authentication login (not implemented yet)');
-    });
-  
-  authCommand
-    .command('status')
-    .description('View authentication status')
-    .action(() => {
-      console.log('Authentication status (not implemented yet)');
-    });
-  
-  authCommand
-    .command('logout')
-    .description('Log out of GitHub')
-    .action(() => {
-      console.log('Authentication logout (not implemented yet)');
-    });
+  // Register auth commands
+  registerAuthCommands(authCommand);
   
   // Config command group
   const configCommand = program
