@@ -9,11 +9,11 @@ import open from 'open';
 import keytar from 'keytar';
 import { config } from '../../config/index.js';
 import { Octokit } from 'octokit';
-import { randomBytes } from 'crypto';
 
 // Service name for keytar
 const SERVICE_NAME = 'lgtm-cli';
 const ACCOUNT_NAME = 'github';
+const GITHUB_CLIENT_ID = 'Ov23liXHh05kD7fFW3Wk'; // GitHub OAuth App client ID for LGTM
 
 /**
  * Authentication methods supported by the service
@@ -55,21 +55,32 @@ export class AuthService {
    */
   async loginWithBrowser(): Promise<GitHubUser> {
     try {
-      const { url, code, state } = await this.createDeviceCodeFlow();
+      const { url, code, deviceCode } = await this.createDeviceCodeFlow();
       
       console.log(`${chalk.yellow('!')} First copy your one-time code: ${chalk.bold(code)}`);
       console.log(`Press ${chalk.bold('Enter')} to open github.com in your browser...`);
       
       // Wait for user to press Enter
-      await new Promise(resolve => {
-        process.stdin.once('data', () => resolve(null));
+      await new Promise<void>(resolve => {
+        // Make sure stdin is in flowing mode
+        process.stdin.resume();
+        
+        // Create one-time event handler for user input
+        const handleInput = (_: Buffer) => {
+          // Clean up stdin configuration
+          process.stdin.pause();
+          process.stdin.removeListener('data', handleInput);
+          resolve();
+        };
+        
+        process.stdin.on('data', handleInput);
       });
       
       // Open browser
       await open(url);
       
       // Wait for user to authenticate
-      const token = await this.pollForToken(state);
+      const token = await this.pollForToken(deviceCode);
       
       // Validate token and get user information
       const user = await this.validateAndSaveToken(token, AuthMethod.Browser);
@@ -269,14 +280,9 @@ export class AuthService {
    * 
    * @returns Promise resolving to device flow information
    */
-  private async createDeviceCodeFlow(): Promise<{ url: string; code: string; state: string }> {
-    const clientId = 'Iv1.c76557a56c8b68ed'; // GitHub OAuth App client ID for LGTM
-    
+  private async createDeviceCodeFlow(): Promise<{ url: string; code: string; deviceCode: string }> {
     const baseUrl = config.get<string>('github.webBaseUrl', 'https://github.com');
     const deviceCodeUrl = `${baseUrl}/login/device/code`;
-    
-    // Generate random state
-    const state = randomBytes(16).toString('hex');
     
     // Request device code
     const response = await fetch(deviceCodeUrl, {
@@ -286,7 +292,7 @@ export class AuthService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: clientId,
+        client_id: GITHUB_CLIENT_ID,
         scope: 'repo',
       }),
     });
@@ -300,19 +306,17 @@ export class AuthService {
     return {
       url: data.verification_uri,
       code: data.user_code,
-      state,
+      deviceCode: data.device_code,
     };
   }
 
   /**
    * Poll for the token after device code authentication
    * 
-   * @param state - State from device code flow
+   * @param deviceCode - The device code received from GitHub
    * @returns Promise resolving to the token
    */
-  private async pollForToken(state: string): Promise<string> {
-    const clientId = 'Iv1.c76557a56c8b68ed'; // GitHub OAuth App client ID for LGTM
-    
+  private async pollForToken(deviceCode: string): Promise<string> {
     const baseUrl = config.get<string>('github.webBaseUrl', 'https://github.com');
     const accessTokenUrl = `${baseUrl}/login/oauth/access_token`;
     
@@ -322,13 +326,15 @@ export class AuthService {
     // Loop until token is received
     let token: string | null = null;
     let retries = 0;
+    const maxRetries = 30; // Maximum number of retry attempts
+    let interval = 5000; // Start with 5 seconds between polls
     
-    while (!token && retries < 30) {
+    while (!token && retries < maxRetries) {
       retries++;
       
       try {
-        // Add a small delay between attempts
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Add a delay between attempts with dynamic interval
+        await new Promise(resolve => setTimeout(resolve, interval));
         
         // Check if the user has authenticated
         const response = await fetch(accessTokenUrl, {
@@ -338,8 +344,8 @@ export class AuthService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            client_id: clientId,
-            device_code: state,
+            client_id: GITHUB_CLIENT_ID,
+            device_code: deviceCode,
             grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
           }),
         });
@@ -351,9 +357,29 @@ export class AuthService {
             token = data.access_token;
             break;
           }
+          
+          // Handle different error types
+          if (data.error) {
+            if (data.error === 'authorization_pending') {
+              // This is normal - user hasn't completed auth yet
+              process.stdout.write('.');
+            } else if (data.error === 'slow_down' || data.error.includes('too many requests')) {
+              // Rate limiting - increase the interval and back off
+              interval = Math.min(interval * 1.5, 30000); // Increase interval up to max of 30 seconds
+              console.log(chalk.yellow(`\nRate limit hit. Slowing down polling (${interval/1000}s)...`));
+            } else {
+              console.log(chalk.yellow(`\nAuthentication status: ${data.error_description || data.error}`));
+            }
+          }
+        } else {
+          // If we get an HTTP error, increase the interval
+          interval = Math.min(interval * 1.5, 30000);
+          process.stdout.write('x');
         }
       } catch (error) {
-        // Ignore errors, just keep trying
+        // Network errors, increase interval
+        interval = Math.min(interval * 1.5, 30000);
+        process.stdout.write('!');
       }
     }
     
@@ -361,6 +387,7 @@ export class AuthService {
       throw new Error('Authentication timed out or was rejected');
     }
     
+    console.log(chalk.green('\nAuthentication successful!'));
     return token;
   }
 }
